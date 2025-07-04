@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AuthService from '../src/Utils/AuthService';
 import {
   View,
   Text,
@@ -23,7 +24,20 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [keepSignedIn, setKeepSignedIn] = useState(false);
 
-  const goHome = () => router.push('/');
+  const goHome = () => {
+    router.push('/');
+  };
+
+  const handleLogin = async () => {
+    try {
+      // Nur Email/Passwort aktuell umgesetzt
+      await AuthService.login(credential, password);
+      alert('Login erfolgreich!');
+      router.push('/');
+    } catch (error) {
+      alert(error.message);
+    }
+  };
 
   return (
     <>
@@ -127,7 +141,10 @@ export default function LoginScreen() {
           </Pressable>
 
           {/* Log In Button */}
-          <TouchableOpacity style={styles.loginButton}>
+          <TouchableOpacity
+            style={styles.loginButton}
+            onPress={handleLogin}
+          >
             <Text style={styles.loginText}>Log In</Text>
           </TouchableOpacity>
 

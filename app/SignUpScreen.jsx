@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import AuthService from '../src/Utils/AuthService';
 import {
   View,
   Text,
@@ -16,7 +17,6 @@ import { Link, useRouter } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
-// Simple password strength meter
 function PasswordStrengthMeter({ password }) {
   const strength = password.length > 9 ? 'strong' : password.length > 5 ? 'medium' : 'weak';
   const colors = { weak: '#EF4444', medium: '#F59E0B', strong: '#10B981' };
@@ -29,7 +29,9 @@ function PasswordStrengthMeter({ password }) {
         ]}
       />
       {!!password.length && (
-        <Text style={[styles.strengthText, { color: colors[strength] }]}>  {strength.charAt(0).toUpperCase() + strength.slice(1)}</Text>
+        <Text style={[styles.strengthText, { color: colors[strength] }]}>
+          {strength.charAt(0).toUpperCase() + strength.slice(1)}
+        </Text>
       )}
     </View>
   );
@@ -43,8 +45,22 @@ export default function SignUpScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
 
-  // Navigate back to home tab
   const goHome = () => router.push('/');
+
+  const handleSignUp = async () => {
+    if (!agreed) {
+      alert('Bitte akzeptiere die Nutzungsbedingungen.');
+      return;
+    }
+    try {
+      // Name + Username könntest du hier noch abfragen; derzeit leer gelassen
+      await AuthService.signUp('', '', credential, password);
+      alert('Registrierung erfolgreich! Bitte bestätige deine E-Mail.');
+      router.push('/LoginScreen');
+    } catch (error) {
+      alert(error.message);
+    }
+  };
 
   return (
     <>
@@ -53,7 +69,7 @@ export default function SignUpScreen() {
         <Pressable onPress={goHome} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#111827" />
         </Pressable>
-        <Text style={styles.headerTitle}> Home Page</Text>
+        <Text style={styles.headerTitle}>Home Page</Text>
       </View>
       <LinearGradient colors={['#EEF2FF', '#EEF2FF']} style={styles.container}>
         <ScrollView contentContainerStyle={styles.scroll}>
@@ -63,6 +79,7 @@ export default function SignUpScreen() {
           />
           <Text style={styles.headerText}>Create account</Text>
           <Text style={styles.subheader}>Sign up to start your fitness journey</Text>
+
           {/* Toggle Tabs */}
           <View style={styles.tabContainer}>
             {['email', 'phone'].map((m) => (
@@ -71,10 +88,13 @@ export default function SignUpScreen() {
                 style={[styles.tab, method === m && styles.activeTab]}
                 onPress={() => setMethod(m)}
               >
-                <Text style={[styles.tabText, method === m && styles.activeTabText]}>  {m.charAt(0).toUpperCase() + m.slice(1)}</Text>
+                <Text style={[styles.tabText, method === m && styles.activeTabText]}>
+                  {m.charAt(0).toUpperCase() + m.slice(1)}
+                </Text>
               </Pressable>
             ))}
           </View>
+
           {/* Credential Input */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>{method === 'email' ? 'Email' : 'Phone'}</Text>
@@ -86,6 +106,7 @@ export default function SignUpScreen() {
               onChangeText={setCredential}
             />
           </View>
+
           {/* Password Input */}
           <View style={styles.fieldContainer}>
             <Text style={styles.fieldLabel}>Password</Text>
@@ -103,6 +124,7 @@ export default function SignUpScreen() {
             </View>
             <PasswordStrengthMeter password={password} />
           </View>
+
           {/* Terms Checkbox */}
           <Pressable style={styles.agreeRow} onPress={() => setAgreed((a) => !a)}>
             <View style={[styles.checkbox, agreed && styles.checked]} />
@@ -112,10 +134,16 @@ export default function SignUpScreen() {
               <Text style={styles.link}>Privacy Policy</Text>
             </Text>
           </Pressable>
+
           {/* Create Account Button */}
-          <TouchableOpacity style={[styles.createButton, !agreed && styles.disabledButton]} disabled={!agreed}>
+          <TouchableOpacity
+            style={[styles.createButton, !agreed && styles.disabledButton]}
+            disabled={!agreed}
+            onPress={handleSignUp}
+          >
             <Text style={styles.createText}>Create Account</Text>
           </TouchableOpacity>
+
           {/* Footer */}
           <View style={styles.footerRow}>
             <Text style={styles.noAccount}>Already have an account? </Text>
