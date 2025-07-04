@@ -36,3 +36,6 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 app/(tabs)/check_in.jsx
+
+
+.env
