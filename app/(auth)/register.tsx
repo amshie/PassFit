@@ -15,15 +15,14 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';  // ← Hooks und Link von expo-router
+import { GoogleLoginButton } from '@/components/ui';
 
 import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
-import { app } from '../firebase';    // Pfad zu deiner firebase.js
-
-const auth = getAuth(app);
+import { auth } from '@/services/firebase';
 const { width } = Dimensions.get('window');
 
 // Passwort-Stärke-Anzeige
-function PasswordStrengthMeter({ password }) {
+function PasswordStrengthMeter({ password }: { password: string }) {
   const strength =
     password.length > 9 ? 'strong' : password.length > 5 ? 'medium' : 'weak';
   const colors = { weak: '#EF4444', medium: '#F59E0B', strong: '#10B981' };
@@ -74,14 +73,14 @@ export default function SignUpScreen() {
 
       //  →  Dynamische Route: /profile/${uid}
       router.replace(`/profile/${user.uid}`);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Sign-Up error:', err);
       if (err.code === 'auth/email-already-in-use') {
         Alert.alert(
           'E-Mail existiert bereits',
           'Diese E-Mail ist bereits registriert. Bitte logge dich ein.'
         );
-        router.replace('/LoginScreen');
+        router.replace('/(auth)/login');
       } else {
         Alert.alert('Fehler', err.message);
       }
@@ -197,10 +196,36 @@ export default function SignUpScreen() {
             <Text style={styles.createText}>Create Account</Text>
           </TouchableOpacity>
 
+          {/* Google Registration Button */}
+          <View style={styles.googleContainer}>
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>oder</Text>
+              <View style={styles.dividerLine} />
+            </View>
+            
+            <GoogleLoginButton
+              mode="register"
+              onSuccess={() => {
+                // Navigate to profile after successful Google registration
+                router.replace('/(tabs)');
+              }}
+              onError={(error) => Alert.alert('Google Registrierung Fehler', error)}
+            />
+          </View>
+
+          {/* Index Button */}
+          <TouchableOpacity
+            style={styles.indexButton}
+            onPress={goHome}
+          >
+            <Text style={styles.indexButtonText}>Zur Index Seite</Text>
+          </TouchableOpacity>
+
           {/* Footer: Login-Link */}
           <View style={styles.footerRow}>
             <Text style={styles.noAccount}>Already have an account? </Text>
-            <Link href="/LoginScreen" asChild>
+            <Link href="/(auth)/login" asChild>
               <TouchableOpacity>
                 <Text style={styles.footerLink}>Log in</Text>
               </TouchableOpacity>
@@ -294,4 +319,38 @@ const styles = StyleSheet.create({
   footerRow: { flexDirection: 'row' },
   noAccount: { fontSize: 12, color: '#6B7280' },
   footerLink: { fontSize: 12, fontWeight: '600', color: '#6B46C1' },
+  googleContainer: {
+    width: '100%',
+    marginBottom: 24,
+  },
+  dividerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E5E7EB',
+  },
+  dividerText: {
+    marginHorizontal: 12,
+    fontSize: 12,
+    color: '#6B7280',
+  },
+  indexButton: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#6B46C1',
+    paddingVertical: 12,
+    borderRadius: 8,
+    width: '100%',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  indexButtonText: {
+    color: '#6B46C1',
+    fontSize: 14,
+    fontWeight: '600',
+  },
 });

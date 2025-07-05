@@ -1,5 +1,5 @@
 import React from 'react';
-import { Ionicons, MaterialCommunityIcons,AntDesign } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons, AntDesign } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 
 export default function TabLayout() {
@@ -8,34 +8,42 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Gym',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="home-outline" size={size} color={color} />
+            <MaterialCommunityIcons name="dumbbell" size={size} color={color} />
           ),
         }}
       />
 
       <Tabs.Screen
-        name="check_in"
+        name="workouts"
         options={{
           title: 'Check In',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="qrcode-scan" size={size} color={color} />
+            <Ionicons name="qr-code-outline" size={size} color={color} />
           ),
         }}
       />
 
-            <Tabs.Screen
-        name="WelcomeScreen"
+      <Tabs.Screen
+        name="progress"
         options={{
-          title: 'Profil',
+          title: 'Progress',
           tabBarIcon: ({ color, size }) => (
-          <AntDesign name="profile" size={size} color={color} />
+            <Ionicons name="stats-chart" size={size} color={color} />
           ),
         }}
       />
 
-      
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: 'Profile',
+          tabBarIcon: ({ color, size }) => (
+            <AntDesign name="profile" size={size} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

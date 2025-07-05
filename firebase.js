@@ -16,14 +16,15 @@ import {
   FIREBASE_MEASUREMENT_ID,
 } from '@env';
 
+// Firebase configuration with your actual project values
 const firebaseConfig = {
-  apiKey:             FIREBASE_API_KEY,
-  authDomain:         FIREBASE_AUTH_DOMAIN,
-  projectId:          FIREBASE_PROJECT_ID,
-  storageBucket:      FIREBASE_STORAGE_BUCKET,
-  messagingSenderId:  FIREBASE_MESSAGING_SENDER_ID,
-  appId:              FIREBASE_APP_ID,
-  measurementId:      FIREBASE_MEASUREMENT_ID,
+  apiKey: FIREBASE_API_KEY || "AIzaSyD6jusepa71b3CPvap0-IAIBf1ObdLAgc4",
+  authDomain: FIREBASE_AUTH_DOMAIN || "fitnesspass-a54cb.firebaseapp.com",
+  projectId: FIREBASE_PROJECT_ID || "fitnesspass-a54cb",
+  storageBucket: FIREBASE_STORAGE_BUCKET || "fitnesspass-a54cb.firebasestorage.app",
+  messagingSenderId: FIREBASE_MESSAGING_SENDER_ID || "583767453466",
+  appId: FIREBASE_APP_ID || "1:583767453466:web:bc6b02d39a2b94764106a3",
+  measurementId: FIREBASE_MEASUREMENT_ID || "G-54844JZSES",
 };
 
 // App initialisieren
