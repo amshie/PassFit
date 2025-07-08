@@ -1,5 +1,5 @@
 // app/SignUpScreen.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';  // ← Hooks und Link von expo-router
 import { GoogleLoginButton } from '@/components/ui';
 
-import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword,sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/services/firebase';
 const { width } = Dimensions.get('window');
 
@@ -53,9 +53,45 @@ export default function SignUpScreen() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreed, setAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [resendCount, setResendCount] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+
 
   // Zurück zur Startseite
   const goHome = () => router.push('/');
+
+   const handleResend = async () => {
+    if (resendCount >= 3) {
+      Alert.alert('Du hast das Limit für erneutes Senden erreicht.');
+      return;
+    }
+    try {
+      const user = getAuth().currentUser!;
+      await sendEmailVerification(user);
+      setResendCount(c => c + 1);
+      Alert.alert('Verifikations-E-Mail erneut gesendet.');
+    } catch (err) {
+      console.error('Resend error', err);
+      Alert.alert('Fehler', 'Konnte Verifikations-E-Mail nicht senden.');
+    }
+  };
+
+  useEffect(() => {
+   if (!verificationPending) return;
+   const interval = setInterval(async () => {
+    const user = getAuth().currentUser!;
+    await user.reload();
+    if (user.emailVerified) {
+      clearInterval(interval);
+      router.replace(`/profile/${user.uid}`);
+    }
+   }, 5000);
+   return () => clearInterval(interval);
+  }, [verificationPending]);
+
 
   // Registrierungs-Handler
   const handleSignUp = async () => {
@@ -63,16 +99,17 @@ export default function SignUpScreen() {
       Alert.alert('Bitte akzeptiere die Nutzungsbedingungen.');
       return;
     }
+    setLoading(true);
     try {
       const { user } = await createUserWithEmailAndPassword(
         auth,
         credential,
         password
       );
-      console.log('User created:', user.uid);
+      await sendEmailVerification(user);
+      setVerificationPending(true);
+      Alert.alert('Verifizierung', 'Bitte prüfe deine E-Mail und bestätige deine Registrierung.');
 
-      //  →  Dynamische Route: /profile/${uid}
-      router.replace(`/profile/${user.uid}`);
     } catch (err: any) {
       console.error('Sign-Up error:', err);
       if (err.code === 'auth/email-already-in-use') {
@@ -84,7 +121,9 @@ export default function SignUpScreen() {
       } else {
         Alert.alert('Fehler', err.message);
       }
-    }
+    } finally {
+    setLoading(false);
+  }
   };
 
   return (
@@ -208,7 +247,8 @@ export default function SignUpScreen() {
               mode="register"
               onSuccess={() => {
                 // Navigate to profile after successful Google registration
-                router.replace('/(tabs)');
+                const user = getAuth().currentUser!;
+                router.replace(`/profile/${user.uid}`);
               }}
               onError={(error) => Alert.alert('Google Registrierung Fehler', error)}
             />
@@ -235,6 +275,24 @@ export default function SignUpScreen() {
       </LinearGradient>
     </>
   );
+  if (verificationPending) {
+  return (
+    <View style={styles.verifyContainer}>
+      <Text style={styles.verifyText}>
+        Bitte verifiziere deine E-Mail. Prüfe dein Postfach!
+      </Text>
+      <TouchableOpacity 
+        style={styles.resendButton} 
+        onPress={handleResend} 
+        disabled={loading || resendCount >= 3}>
+        <Text style={styles.resendText}>
+          {resendCount >= 3 ? 'Limit erreicht' : 'E-Mail erneut senden'}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 }
 
 const styles = StyleSheet.create({
@@ -350,6 +408,30 @@ const styles = StyleSheet.create({
   },
   indexButtonText: {
     color: '#6B46C1',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  verifyContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#EEF2FF',
+  },
+  verifyText: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 20,
+    color: '#111827',
+  },
+  resendButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    backgroundColor: '#6B46C1',
+    borderRadius: 8,
+  },
+  resendText: {
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '600',
   },
