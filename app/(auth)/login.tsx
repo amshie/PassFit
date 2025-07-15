@@ -21,7 +21,7 @@ export default function LoginScreen() {
 
   const handleLoginSuccess = () => {
     // Navigate to main app after successful login
-    router.replace('/(tabs)');
+    router.replace('/(tabs)/home');
   };
 
   return (

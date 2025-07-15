@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, QueryClient, QueryKey } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   loadUserProfile,
   createUserProfile,

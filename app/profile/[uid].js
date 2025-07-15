@@ -1,5 +1,5 @@
-// app/profile/uid].js[
-import React, { useState } from 'react';
+// app/profile/[uid].js - Refactored mit Hook-Layer
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   TextInput, 
@@ -9,26 +9,50 @@ import {
   Text, 
   TouchableOpacity, 
   ScrollView,
-  Platform
+  Platform,
+  ActivityIndicator
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import {
   useLocalSearchParams,
   useRouter
 } from 'expo-router';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
-import { app } from '../../firebase';
+import { Timestamp } from 'firebase/firestore';
 
-const db = getFirestore(app);
+// ✅ Hook-Layer einbinden - Komponente weiß nur, dass sie User-Daten braucht
+import { useUser, useCreateUser, useUpdateUser } from '../../src/hooks/useUser';
 
 export default function ProfileScreen() {
-  const { uid } = useLocalSearchParams();  // holt den Pfad-Parameter
+  const { uid } = useLocalSearchParams();
   const router = useRouter();
+  
+  // ✅ Hooks für deklaratives Data Fetching und Mutations
+  const { data: existingUser, isLoading: isLoadingUser, error: userError } = useUser(uid);
+  const createUserMutation = useCreateUser();
+  const updateUserMutation = useUpdateUser(uid);
+  
+  // Local state für Form-Daten
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [sex, setSex] = useState('');
   const [birthdate, setBirthdate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+
+  // ✅ Existierende User-Daten laden (falls vorhanden)
+  useEffect(() => {
+    if (existingUser) {
+      setFirstName(existingUser.firstName || '');
+      setLastName(existingUser.lastName || '');
+      setSex(existingUser.sex || '');
+      if (existingUser.birthdate) {
+        // Convert Firestore Timestamp to Date
+        const date = existingUser.birthdate instanceof Timestamp 
+          ? existingUser.birthdate.toDate() 
+          : new Date(existingUser.birthdate);
+        setBirthdate(date);
+      }
+    }
+  }, [existingUser]);
 
   const formatDate = (date) => {
     const day = date.getDate().toString().padStart(2, '0');
@@ -62,6 +86,7 @@ export default function ProfileScreen() {
     setBirthdate(currentDate);
   };
 
+  // ✅ Vereinfachter Save-Handler - nutzt Hook-Layer
   const handleSave = async () => {
     if (!firstName.trim() || !lastName.trim() || !sex || !birthdate) {
       return Alert.alert('Fehler', 'Bitte fülle alle Felder aus.');
@@ -74,21 +99,58 @@ export default function ProfileScreen() {
         'Du musst mindestens 16 Jahre alt sein, um dich zu registrieren.'
       );
     }
-    
+
+    // ✅ User-Daten für Service-Layer vorbereiten
+    const userData = {
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      sex,
+      birthdate: Timestamp.fromDate(birthdate),
+      age,
+      displayName: `${firstName.trim()} ${lastName.trim()}`,
+      email: existingUser?.email || '', // Falls bereits vorhanden
+    };
+
     try {
-      await setDoc(doc(db, 'users', uid), { 
-        firstName, 
-        lastName, 
-        sex, 
-        birthdate: formatDate(birthdate), 
-        age: age,
-        createdAt: new Date() 
-      });
-      router.replace('/Dashboard');
-    } catch (err) {
-      Alert.alert('Fehler', err.message);
+      if (existingUser) {
+        // ✅ Update existierender User über Hook
+        await updateUserMutation.mutateAsync(userData);
+        Alert.alert('Erfolg', 'Profil erfolgreich aktualisiert!');
+      } else {
+        // ✅ Neuen User erstellen über Hook
+        await createUserMutation.mutateAsync({
+          uid,
+          ...userData,
+        });
+        Alert.alert('Erfolg', 'Profil erfolgreich erstellt!');
+      }
+      
+      router.replace('/(tabs)/home'); // Navigate to main app
+    } catch (error) {
+      console.error('Profile save error:', error);
+      Alert.alert('Fehler', 'Profil konnte nicht gespeichert werden. Bitte versuche es erneut.');
     }
   };
+
+  // ✅ Loading State
+  if (isLoadingUser) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color="#6B46C1" />
+        <Text style={styles.loadingText}>Lade Profildaten...</Text>
+      </View>
+    );
+  }
+
+  // ✅ Error State
+  if (userError && userError.message !== 'User not found') {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <Text style={styles.errorText}>Fehler beim Laden der Profildaten</Text>
+        <Button title="Erneut versuchen" onPress={() => window.location.reload()} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -151,7 +213,22 @@ export default function ProfileScreen() {
         />
       )}
       
-      <Button title="Profil speichern" onPress={handleSave} />
+      <TouchableOpacity
+        style={[
+          styles.saveButton,
+          (createUserMutation.isPending || updateUserMutation.isPending) && styles.disabledButton
+        ]}
+        onPress={handleSave}
+        disabled={createUserMutation.isPending || updateUserMutation.isPending}
+      >
+        {(createUserMutation.isPending || updateUserMutation.isPending) ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.saveButtonText}>
+            {existingUser ? 'Profil aktualisieren' : 'Profil speichern'}
+          </Text>
+        )}
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -161,6 +238,10 @@ const styles = StyleSheet.create({
     flex: 1, 
     padding: 16,
     backgroundColor: '#fff'
+  },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     fontSize: 24,
@@ -233,4 +314,30 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
     marginBottom: 0,
   },
-})
+  saveButton: {
+    backgroundColor: '#6B46C1',
+    paddingVertical: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  disabledButton: {
+    backgroundColor: '#A78BFA',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6B7280',
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#EF4444',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+});

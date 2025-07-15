@@ -17,8 +17,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link, useRouter } from 'expo-router';  // ← Hooks und Link von expo-router
 import { GoogleLoginButton } from '@/components/ui';
 
-import { getAuth, createUserWithEmailAndPassword,sendEmailVerification } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/services/firebase';
+import { useCreateUser } from '../../src/hooks/useUser';
 const { width } = Dimensions.get('window');
 
 // Passwort-Stärke-Anzeige
@@ -48,6 +49,8 @@ function PasswordStrengthMeter({ password }: { password: string }) {
 
 export default function SignUpScreen() {
   const router = useRouter();       // ← hook holen
+  const createUserMutation = useCreateUser(); // ✅ Hook für User-Erstellung
+  
   const [method, setMethod] = useState('email');
   const [credential, setCredential] = useState('');
   const [password, setPassword] = useState('');
@@ -93,7 +96,7 @@ export default function SignUpScreen() {
   }, [verificationPending]);
 
 
-  // Registrierungs-Handler
+  // ✅ Vereinfachter Registrierungs-Handler mit Hook-Layer
   const handleSignUp = async () => {
     if (!agreed) {
       Alert.alert('Bitte akzeptiere die Nutzungsbedingungen.');
@@ -101,14 +104,21 @@ export default function SignUpScreen() {
     }
     setLoading(true);
     try {
+      // 1. Firebase Auth User erstellen
       const { user } = await createUserWithEmailAndPassword(
         auth,
         credential,
         password
       );
-      await sendEmailVerification(user);
-      setVerificationPending(true);
-      Alert.alert('Verifizierung', 'Bitte prüfe deine E-Mail und bestätige deine Registrierung.');
+      // 2. Email-Verifikation senden
+     await sendEmailVerification(user);
+
+     // 3. Zustand setzen, dass auf Verifikation gewartet wird
+     setVerificationPending(true);
+
+     // 4. Weiterleitung zur separaten Verifikations-Seite
+     router.replace('/verify-email');
+    
 
     } catch (err: any) {
       console.error('Sign-Up error:', err);
@@ -122,8 +132,8 @@ export default function SignUpScreen() {
         Alert.alert('Fehler', err.message);
       }
     } finally {
-    setLoading(false);
-  }
+      setLoading(false);
+    }
   };
 
   return (

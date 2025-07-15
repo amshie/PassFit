@@ -3,18 +3,28 @@ module.exports = function(api) {
   api.cache(true);
   return {
     presets: [
-      // Expo-Preset mit NativeWind JSX-Import
-      ['babel-preset-expo', { jsxImportSource: 'nativewind' }],
-      // NativeWind als Preset (wichtig für v4!)
+      // Expo-Preset with proper configuration
+      ['babel-preset-expo', { 
+        jsxImportSource: 'nativewind',
+        lazyImports: true,
+        native: {
+          unstable_transformProfile: 'default'
+        }
+      }],
+      // NativeWind preset
       'nativewind/babel',
     ],
     plugins: [
-      // dotenv (so wie bisher)
+      // dotenv plugin
       ['module:react-native-dotenv', {
         moduleName: '@env',
-        path: '.env'
+        path: '.env',
+        blocklist: null,
+        allowlist: null,
+        safe: false,
+        allowUndefined: true
       }],
-      // Falls du Reanimated nutzt:
+      // Reanimated plugin (must be last)
       'react-native-reanimated/plugin',
     ],
   };

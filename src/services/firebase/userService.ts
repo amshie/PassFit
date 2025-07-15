@@ -28,17 +28,20 @@ export async function createUserProfile(
   uid: string,
   data: Omit<User, 'uid' | 'createdAt'>
 ): Promise<void> {
-  const payload: User = {
+  const payload: Partial<User> = {
     uid,
     ...data,
     createdAt: Timestamp.now(),
-    age: data.birthdate
-      ? Math.floor(
-          (Timestamp.now().toMillis() - data.birthdate.toMillis()) /
-            (1000 * 60 * 60 * 24 * 365)
-        )
-      : undefined
   };
+
+  // Only add age if birthdate is provided
+  if (data.birthdate) {
+    payload.age = Math.floor(
+      (Timestamp.now().toMillis() - data.birthdate.toMillis()) /
+        (1000 * 60 * 60 * 24 * 365)
+    );
+  }
+
   await setDoc(doc(db, 'users', uid), payload);
 }
 
