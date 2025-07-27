@@ -1,0 +1,104 @@
+{
+  "common": {
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "retry": "Erneut versuchen",
+    "cancel": "Abbrechen",
+    "ok": "OK",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "search": "Suchen",
+    "filter": "Filter",
+    "reset": "Zurücksetzen",
+    "refresh": "Aktualisieren",
+    "close": "Schließen"
+  },
+  "location": {
+    "determining": "Standort wird ermittelt...",
+    "permissionDenied": "Standortberechtigung verweigert",
+    "errorDetermining": "Fehler beim Ermitteln des Standorts",
+    "selectLocation": "Standort auswählen",
+    "permissionDeniedMessage": "GPS-Berechtigung wurde verweigert. Wählen Sie einen Standort aus:",
+    "retryGPS": "GPS erneut versuchen",
+    "currentLocation": "Standort: {{location}}",
+    "studiosVisible": "{{count}} Studios sichtbar",
+    "studiosInRadius": "{{count}} Studios im {{radius}}km Umkreis",
+    "studiosWorldwide": "{{count}} Studios weltweit"
+  },
+  "studios": {
+    "loading": "Studios werden geladen...",
+    "loadingError": "Fehler beim Laden der Studios",
+    "found": "{{count}} Studios gefunden",
+    "noStudiosFound": "Keine Studios gefunden",
+    "noStudiosInArea": "Keine Studios in diesem Bereich",
+    "moveMapOrZoom": "Verschieben Sie die Karte oder zoomen Sie heraus",
+    "searchPlaceholder": "Studios suchen...",
+    "partnerSearch": "Partner finden",
+    "showStudios": "Studios anzeigen",
+    "studiosNearby": "Studios in der Nähe",
+    "tryOtherTerms": "Versuchen Sie andere Suchbegriffe oder erweitern Sie den Suchradius.",
+    "unknownError": "Unbekannter Fehler"
+  },
+  "auth": {
+    "loading": "Wird geladen...",
+    "loginError": "Anmeldung fehlgeschlagen",
+    "googleLoginError": "Google Anmeldung Fehler",
+    "googleRegisterError": "Google Registrierung Fehler",
+    "loginFailed": "Ein Fehler ist bei der Anmeldung aufgetreten",
+    "verificationEmailSent": "Verifikations-E-Mail erneut gesendet.",
+    "verificationEmailError": "E-Mail konnte nicht erneut gesendet werden.",
+    "emailSent": "E-Mail gesendet!",
+    "resetLinkSent": "Wir haben Ihnen einen Link zum Zurücksetzen Ihres Passworts an Ihre E-Mail-Adresse gesendet. Bitte überprüfen Sie auch Ihren Spam-Ordner.",
+    "resetLinkSending": "Wird gesendet...",
+    "sendResetLink": "Reset-Link senden",
+    "emailSentSuccess": "E-Mail erfolgreich gesendet! Überprüfen Sie Ihr Postfach.",
+    "tooManyRequests": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+    "unknownError": "Ein unbekannter Fehler ist aufgetreten.",
+    "logoutFailed": "Logout fehlgeschlagen. Bitte versuche es erneut.",
+    "deleteAccountError": "Account konnte nicht gelöscht werden"
+  },
+  "profile": {
+    "loading": "Lade Profildaten...",
+    "loadingError": "Fehler beim Laden der Profildaten",
+    "saveError": "Profil konnte nicht gespeichert werden. Bitte versuche es erneut.",
+    "fillAllFields": "Bitte fülle alle Felder aus."
+  },
+  "camera": {
+    "permissionLoading": "Kamera-Berechtigung wird geladen...",
+    "permissionRequired": "Kamera-Berechtigung erforderlich",
+    "grantPermission": "Berechtigung erteilen",
+    "scanQR": "QR-Code scannen",
+    "processingError": "Fehler beim Verarbeiten",
+    "qrProcessingError": "Der QR-Code konnte nicht verarbeitet werden. Bitte versuchen Sie es erneut."
+  },
+  "studio": {
+    "loading": "Studio wird geladen...",
+    "createError": "Studio konnte nicht erstellt werden.",
+    "updateError": "Studio konnte nicht aktualisiert werden.",
+    "nameRequired": "Bitte geben Sie einen Studio-Namen ein.",
+    "addressRequired": "Bitte geben Sie eine Adresse ein.",
+    "coordinatesRequired": "Bitte geben Sie gültige Koordinaten ein.",
+    "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+    "description": "Beschreibung des Studios...",
+    "location": "Standort"
+  },
+  "workout": {
+    "startError": "Workout konnte nicht gestartet werden. Bitte versuchen Sie es erneut."
+  },
+  "accessibility": {
+    "searchStudios": "Studios suchen",
+    "filterStudios": "Studios filtern",
+    "showStudiosList": "Studios-Liste anzeigen",
+    "selectStudio": "Studio auswählen",
+    "centerOnLocation": "Auf aktuellen Standort zentrieren",
+    "retryLocationPermission": "GPS-Berechtigung erneut anfordern",
+    "selectFallbackLocation": "Ersatzstandort auswählen",
+    "studioCard": "Studio {{name}}, {{distance}} entfernt",
+    "mapView": "Kartenansicht mit Studios",
+    "studioMarker": "Studio-Marker für {{name}}",
+    "refreshStudios": "Studios aktualisieren",
+    "closeModal": "Modal schließen",
+    "applyFilters": "Filter anwenden"
+  }
+}

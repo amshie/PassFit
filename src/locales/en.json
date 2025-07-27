@@ -1,0 +1,104 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Try again",
+    "cancel": "Cancel",
+    "ok": "OK",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "filter": "Filter",
+    "reset": "Reset",
+    "refresh": "Refresh",
+    "close": "Close"
+  },
+  "location": {
+    "determining": "Determining location...",
+    "permissionDenied": "Location permission denied",
+    "errorDetermining": "Error determining location",
+    "selectLocation": "Select location",
+    "permissionDeniedMessage": "GPS permission was denied. Please select a location:",
+    "retryGPS": "Retry GPS",
+    "currentLocation": "Location: {{location}}",
+    "studiosVisible": "{{count}} studios visible",
+    "studiosInRadius": "{{count}} studios within {{radius}}km radius",
+    "studiosWorldwide": "{{count}} studios worldwide"
+  },
+  "studios": {
+    "loading": "Loading studios...",
+    "loadingError": "Error loading studios",
+    "found": "{{count}} studios found",
+    "noStudiosFound": "No studios found",
+    "noStudiosInArea": "No studios in this area",
+    "moveMapOrZoom": "Move the map or zoom out",
+    "searchPlaceholder": "Search studios...",
+    "partnerSearch": "Find partner",
+    "showStudios": "Show studios",
+    "studiosNearby": "Studios nearby",
+    "tryOtherTerms": "Try other search terms or expand the search radius.",
+    "unknownError": "Unknown error"
+  },
+  "auth": {
+    "loading": "Loading...",
+    "loginError": "Login failed",
+    "googleLoginError": "Google login error",
+    "googleRegisterError": "Google registration error",
+    "loginFailed": "An error occurred during login",
+    "verificationEmailSent": "Verification email sent again.",
+    "verificationEmailError": "Could not resend email.",
+    "emailSent": "Email sent!",
+    "resetLinkSent": "We have sent you a password reset link to your email address. Please also check your spam folder.",
+    "resetLinkSending": "Sending...",
+    "sendResetLink": "Send reset link",
+    "emailSentSuccess": "Email sent successfully! Check your inbox.",
+    "tooManyRequests": "Too many requests. Please try again later.",
+    "unknownError": "An unknown error occurred.",
+    "logoutFailed": "Logout failed. Please try again.",
+    "deleteAccountError": "Account could not be deleted"
+  },
+  "profile": {
+    "loading": "Loading profile data...",
+    "loadingError": "Error loading profile data",
+    "saveError": "Profile could not be saved. Please try again.",
+    "fillAllFields": "Please fill in all fields."
+  },
+  "camera": {
+    "permissionLoading": "Camera permission loading...",
+    "permissionRequired": "Camera permission required",
+    "grantPermission": "Grant permission",
+    "scanQR": "Scan QR code",
+    "processingError": "Processing error",
+    "qrProcessingError": "The QR code could not be processed. Please try again."
+  },
+  "studio": {
+    "loading": "Loading studio...",
+    "createError": "Studio could not be created.",
+    "updateError": "Studio could not be updated.",
+    "nameRequired": "Please enter a studio name.",
+    "addressRequired": "Please enter an address.",
+    "coordinatesRequired": "Please enter valid coordinates.",
+    "emailInvalid": "Please enter a valid email address.",
+    "description": "Studio description...",
+    "location": "Location"
+  },
+  "workout": {
+    "startError": "Workout could not be started. Please try again."
+  },
+  "accessibility": {
+    "searchStudios": "Search studios",
+    "filterStudios": "Filter studios",
+    "showStudiosList": "Show studios list",
+    "selectStudio": "Select studio",
+    "centerOnLocation": "Center on current location",
+    "retryLocationPermission": "Retry GPS permission",
+    "selectFallbackLocation": "Select fallback location",
+    "studioCard": "Studio {{name}}, {{distance}} away",
+    "mapView": "Map view with studios",
+    "studioMarker": "Studio marker for {{name}}",
+    "refreshStudios": "Refresh studios",
+    "closeModal": "Close modal",
+    "applyFilters": "Apply filters"
+  }
+}

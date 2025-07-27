@@ -7,6 +7,12 @@ export * from './user.types';
 // Workout types
 export * from './workout.types';
 
+// Map types
+export * from './map.types';
+
+// Home types
+export * from './home.types';
+
 // Common types
 export interface ApiResponse<T> {
   data: T;

@@ -4,3 +4,4 @@ export { WorkoutService } from './workout.service';
 export { StudioService } from './studio.service';
 export { SubscriptionService } from './subscription.service';
 export { PlanService } from './plan.service';
+export { CheckInService } from './checkin.service';
