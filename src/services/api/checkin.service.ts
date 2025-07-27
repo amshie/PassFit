@@ -14,7 +14,7 @@ import { db } from '../firebase/config';
 import { CheckIn } from '../../models/checkIn';
 
 export class CheckInService {
-  private static readonly COLLECTION = 'checkIns';
+  private static readonly COLLECTION = 'checkIn';
 
   /**
    * Create a new check-in
@@ -111,7 +111,6 @@ export class CheckInService {
       const q = query(
         collection(db, this.COLLECTION),
         where('userId', '==', userId),
-        where('studioId', '==', studioId),
         where('checkinTime', '>=', Timestamp.fromDate(startOfToday)),
         where('checkinTime', '<', Timestamp.fromDate(endOfToday))
       );
@@ -214,6 +213,61 @@ export class CheckInService {
       throw error;
     }
   }
+/**
+ * Gibt Info zurück, ob ein neuer Check-in angelegt wurde
+ */
+static async checkAndCreate(
+  data: Omit<CheckIn, 'checkInId' | 'checkinTime'>
+): Promise<{ success: boolean; alreadyCheckedIn?: boolean; checkInId?: string }> {
+  try {
+    const { userId, studioId } = data;
+
+    // Nutze zwei getrennte Date-Objekte, um Mutation zu vermeiden
+    const now = new Date();
+    const startOfDayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const endOfDayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    const startOfDay = Timestamp.fromDate(startOfDayDate);
+    const endOfDay = Timestamp.fromDate(endOfDayDate);
+
+    // Suche nach bestehendem Check-in für heute
+    const existing = await getDocs(
+      query(
+        collection(db, this.COLLECTION),
+        where('userId', '==', userId),
+        where('checkinTime', '>=', startOfDay),
+        where('checkinTime', '<=', endOfDay)
+      )
+    );
+
+    if (!existing.empty) {
+      return {
+        success: false,
+        alreadyCheckedIn: true,
+      };
+    }
+
+    // Erstelle neuen Check-in
+    const payload: Omit<CheckIn, 'checkInId'> = {
+      userId,
+      studioId,
+      checkinTime: Timestamp.now(),
+    };
+
+    const ref = await addDoc(collection(db, this.COLLECTION), payload);
+
+    return {
+      success: true,
+      checkInId: ref.id,
+    };
+  } catch (error: any) {
+    console.error('Fehler in checkAndCreate:', error);
+    throw new Error(error.message || 'Fehler beim Erstellen des Check-Ins.');
+  }
+}
+
+
+
 
   /**
    * Get check-in statistics for a user

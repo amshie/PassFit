@@ -1,106 +1,92 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect , useRef} from 'react';
 import { StyleSheet, Text, View, Alert, TouchableOpacity } from 'react-native';
 import { Camera, CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { QRScannerService, QRScanResult } from '../src/services/qr-scanner.service';
+import { auth, db } from '../src/services/firebase/config';
+import { CheckInService } from '../src/services/api/checkin.service';
+
 
 export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const scanningRef = useRef(false);
 
-  const handleBarCodeScanned = async ({ type, data }: BarcodeScanningResult) => {
-    setScanned(true);
+const handleBarCodeScanned = async ({ data }: { data: string }) => {
+  if (scanningRef.current) return;
+    scanningRef.current = true;
 
-    // Validate QR code
-    if (!QRScannerService.isValidQRCode(data)) {
-      Alert.alert(
-        'Ungültiger QR-Code',
-        'Der gescannte Code ist nicht gültig oder unterstützt.',
-        [
-          {
-            text: 'Erneut scannen',
-            onPress: () => setScanned(false),
-          },
-          {
-            text: 'Zurück',
-            onPress: () => router.back(),
-          },
-        ]
-      );
-      return;
+  // Vorsichtshalber: Frühzeitig beenden, wenn kein gültiger Nutzer
+  const user = auth.currentUser;
+  if (!user) {
+    Alert.alert('Fehler', 'Du musst eingeloggt sein.');
+    setScanned(false); // <-- scan wieder freigeben bei Fehler
+    return;
+  }
+
+  let payload: any;
+  try {
+    payload = JSON.parse(data);
+  } catch {
+    Alert.alert(
+      'Ungültiger QR-Code',
+      'Der Code ist kein gültiges JSON.',
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            // erst hier wieder freigeben, wenn der Nutzer OK gedrückt hat
+            scanningRef.current = false;
+          }
+        }
+      ],
+      { cancelable: false }
+    );
+    return;
+  }
+
+  if (payload.type !== 'checkin' || typeof payload.studioId !== 'string') {
+    Alert.alert(
+      'Ungültiger QR-Code',
+      'Dies ist kein Check-In-QR.',
+      [
+        {
+          text: 'OK',
+          onPress: () => {
+            scanningRef.current = false;
+          }
+        }
+      ],
+      { cancelable: false }
+    );
+    return;
+  }
+  setScanned(true);
+  
+  try {
+    const result = await CheckInService.checkAndCreate({
+      userId: user.uid,
+      studioId: payload.studioId,
+    });
+
+    if (result.alreadyCheckedIn) {
+      router.push({
+        pathname: '/progress',
+        params: { alreadyCheckedIn: 'true' },
+      });
+    } else {
+      router.push({
+        pathname: '/progress',
+        params: { newCheckIn: 'true' },
+      });
     }
+  } catch (err: any) {
+    Alert.alert('Check-In fehlgeschlagen', err.message);
+    setScanned(false); // <-- scan wieder freigeben bei Fehler
+  }
+};
 
-    // Process QR code
-    const scanResult: QRScanResult = {
-      type,
-      data,
-      timestamp: new Date(),
-    };
-
-    try {
-      const workoutData = await QRScannerService.processQRCode(scanResult);
-      
-      if (workoutData) {
-        // Show workout confirmation
-        Alert.alert(
-          'Trainingsgerät erkannt!',
-          `Gerät: ${workoutData.equipmentName}\nTyp: ${workoutData.workoutType}\nID: ${workoutData.equipmentId}`,
-          [
-            {
-              text: 'Abbrechen',
-              style: 'cancel',
-              onPress: () => setScanned(false),
-            },
-            {
-              text: 'Workout starten',
-              onPress: async () => {
-                const success = await QRScannerService.startWorkoutSession(workoutData);
-                if (success) {
-                  router.back();
-                } else {
-                  setScanned(false);
-                }
-              },
-            },
-          ]
-        );
-      } else {
-        // Unknown QR code format
-        Alert.alert(
-          'QR-Code nicht erkannt',
-          `Der gescannte Code konnte nicht als Trainingsgerät identifiziert werden.\n\nInhalt: ${data}`,
-          [
-            {
-              text: 'Erneut scannen',
-              onPress: () => setScanned(false),
-            },
-            {
-              text: 'Zurück',
-              onPress: () => router.back(),
-            },
-          ]
-        );
-      }
-    } catch (error) {
-      console.error('Error processing QR code:', error);
-      Alert.alert(
-        'Fehler beim Verarbeiten',
-        'Der QR-Code konnte nicht verarbeitet werden. Bitte versuchen Sie es erneut.',
-        [
-          {
-            text: 'Erneut scannen',
-            onPress: () => setScanned(false),
-          },
-          {
-            text: 'Zurück',
-            onPress: () => router.back(),
-          },
-        ]
-      );
-    }
-  };
 
   if (!permission) {
     // Camera permissions are still loading
@@ -127,64 +113,69 @@ export default function ScannerScreen() {
     );
   }
 
-  return (
+return (
     <SafeAreaView style={styles.container}>
-      <Stack.Screen 
-        options={{ 
-          title: "QR Scanner", 
+      <Stack.Screen
+        options={{
+          title: 'QR Scanner',
           headerShown: true,
           headerLeft: () => (
             <TouchableOpacity onPress={() => router.back()}>
               <Ionicons name="arrow-back" size={24} color="#007AFF" />
             </TouchableOpacity>
           ),
-        }} 
+        }}
       />
-      
+
       <View style={styles.cameraContainer}>
         <CameraView
-          style={styles.camera}
+          style={StyleSheet.absoluteFill}
           facing="back"
           onBarcodeScanned={scanned ? undefined : handleBarCodeScanned}
           barcodeScannerSettings={{
-            barcodeTypes: ['qr', 'pdf417', 'aztec', 'ean13', 'ean8', 'upc_e', 'datamatrix', 'code128', 'code39', 'codabar', 'itf14', 'upc_a'],
+            barcodeTypes: ['qr'],
           }}
-        >
-          <View style={styles.overlay}>
+        />
+
+        {/* Overlay UI separat */}
+        <View style={styles.overlay}>
+          <View style={styles.unfocusedContainer}></View>
+          <View style={styles.middleContainer}>
             <View style={styles.unfocusedContainer}></View>
-            <View style={styles.middleContainer}>
-              <View style={styles.unfocusedContainer}></View>
-              <View style={styles.focusedContainer}>
-                <View style={styles.scannerFrame}>
-                  <View style={[styles.corner, styles.topLeft]} />
-                  <View style={[styles.corner, styles.topRight]} />
-                  <View style={[styles.corner, styles.bottomLeft]} />
-                  <View style={[styles.corner, styles.bottomRight]} />
-                </View>
+            <View style={styles.focusedContainer}>
+              <View style={styles.scannerFrame}>
+                <View style={[styles.corner, styles.topLeft]} />
+                <View style={[styles.corner, styles.topRight]} />
+                <View style={[styles.corner, styles.bottomLeft]} />
+                <View style={[styles.corner, styles.bottomRight]} />
               </View>
-              <View style={styles.unfocusedContainer}></View>
             </View>
             <View style={styles.unfocusedContainer}></View>
           </View>
-          
-          <View style={styles.instructionContainer}>
-            <Text style={styles.instructionText}>
-              Richten Sie die Kamera auf einen QR-Code
-            </Text>
+          <View style={styles.unfocusedContainer}></View>
+        </View>
+
+        <View style={styles.instructionContainer}>
+          <Text style={styles.instructionText}>
+            Richten Sie die Kamera auf einen QR-Code
+          </Text>
+        </View>
+
+        {scanned && (
+          <View style={styles.rescanContainer}>
+            <TouchableOpacity style={styles.rescanButton} onPress={() => setScanned(false)}>
+              <Text style={styles.rescanButtonText}>Erneut scannen</Text>
+            </TouchableOpacity>
           </View>
-        </CameraView>
+        )}
       </View>
 
-      {scanned && (
-        <View style={styles.rescanContainer}>
-          <TouchableOpacity
-            style={styles.rescanButton}
-            onPress={() => setScanned(false)}
-          >
-            <Text style={styles.rescanButtonText}>Erneut scannen</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      <View style={styles.backContainer}>
+        <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+          <Ionicons name="arrow-back-circle" size={28} color="#007AFF" />
+          <Text style={styles.backButtonText}>Zurück zur Check-In Seite</Text>
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 }
@@ -311,5 +302,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+    backContainer: {
+    position: 'absolute',
+    bottom: 30,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+  },
+  backButtonText: {
+    color: '#007AFF',
+    fontSize: 16,
+    marginLeft: 8,
   },
 });
