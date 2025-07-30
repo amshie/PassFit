@@ -1,5 +1,6 @@
 // User hooks
 export * from './useUser.ts';
+export * from './useUserType.ts';
 
 // Studio hooks
 export * from './useStudio.ts';

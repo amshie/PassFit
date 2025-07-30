@@ -86,6 +86,36 @@
   "workout": {
     "startError": "Workout could not be started. Please try again."
   },
+  "settings": {
+    "title": "Settings",
+    "language": {
+      "title": "Language",
+      "description": "Select app language",
+      "error": "Error changing language"
+    },
+    "theme": {
+      "title": "Theme",
+      "description": "Select app theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System",
+      "error": "Error changing theme"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "description": "Enable/disable push notifications",
+      "error": "Error changing notification settings",
+      "permissionDenied": "Notification permission denied",
+      "permissionRequired": "Notification permission required"
+    }
+  },
+  "upgrade": {
+    "choosePlan": "Choose your plan",
+    "vip": "VIP Plan",
+    "gold": "Gold Plan",
+    "vipPrice": "€ 99 / Month",
+    "goldPrice": "€ 49 / Month"
+  },
   "accessibility": {
     "searchStudios": "Search studios",
     "filterStudios": "Filter studios",

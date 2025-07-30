@@ -1,6 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { SubscriptionService } from '../services/api/subscription.service';
+import { syncUserSubscriptionStatus } from '../services/firebase/userService';
 import { Subscription } from '../models/subscription';
+import { User } from '../models/users';
 
 // Query Keys
 export const subscriptionKeys = {
@@ -120,13 +122,20 @@ export function useCreateSubscription() {
   return useMutation({
     mutationFn: (subscriptionData: Omit<Subscription, 'subscriptionId'>) =>
       SubscriptionService.createSubscription(subscriptionData),
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
+      // Sync subscription status to user document
+      await syncSubscriptionStatusToUser(variables.userId, variables.status);
+      
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.user(variables.userId) });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.userActive(variables.userId) });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.plan(variables.planId) });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.status(variables.status) });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.stats() });
+      
+      // Invalidate user cache to trigger realtime updates
+      queryClient.invalidateQueries({ queryKey: ['user', variables.userId] });
+      queryClient.invalidateQueries({ queryKey: ['user', variables.userId, 'subscriptionStatus'] });
     },
     onError: (error) => {
       console.error('Failed to create subscription:', error);
@@ -143,20 +152,29 @@ export function useUpdateSubscriptionStatus() {
   return useMutation({
     mutationFn: ({ subscriptionId, status }: { subscriptionId: string; status: Subscription['status'] }) =>
       SubscriptionService.updateSubscriptionStatus(subscriptionId, status),
-    onSuccess: (_, { subscriptionId }) => {
+    onSuccess: async (_, { subscriptionId, status }) => {
+      // Get the subscription to sync user status
+      const subscription = queryClient.getQueryData<Subscription>(
+        subscriptionKeys.detail(subscriptionId)
+      );
+      
+      if (subscription) {
+        // Sync subscription status to user document
+        await syncSubscriptionStatusToUser(subscription.userId, status);
+        
+        // Invalidate user-specific queries
+        queryClient.invalidateQueries({ queryKey: subscriptionKeys.user(subscription.userId) });
+        queryClient.invalidateQueries({ queryKey: subscriptionKeys.userActive(subscription.userId) });
+        
+        // Invalidate user cache to trigger realtime updates
+        queryClient.invalidateQueries({ queryKey: ['user', subscription.userId] });
+        queryClient.invalidateQueries({ queryKey: ['user', subscription.userId, 'subscriptionStatus'] });
+      }
+      
       // Invalidate specific subscription and related queries
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.detail(subscriptionId) });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.stats() });
-      
-      // Get the subscription to invalidate user-specific queries
-      const subscription = queryClient.getQueryData<Subscription>(
-        subscriptionKeys.detail(subscriptionId)
-      );
-      if (subscription) {
-        queryClient.invalidateQueries({ queryKey: subscriptionKeys.user(subscription.userId) });
-        queryClient.invalidateQueries({ queryKey: subscriptionKeys.userActive(subscription.userId) });
-      }
     },
     onError: (error) => {
       console.error('Failed to update subscription status:', error);
@@ -203,20 +221,29 @@ export function useCancelSubscription() {
   return useMutation({
     mutationFn: (subscriptionId: string) =>
       SubscriptionService.cancelSubscription(subscriptionId),
-    onSuccess: (_, subscriptionId) => {
+    onSuccess: async (_, subscriptionId) => {
+      // Get the subscription to sync user status
+      const subscription = queryClient.getQueryData<Subscription>(
+        subscriptionKeys.detail(subscriptionId)
+      );
+      
+      if (subscription) {
+        // Sync canceled status to user document
+        await syncSubscriptionStatusToUser(subscription.userId, 'canceled');
+        
+        // Invalidate user-specific queries
+        queryClient.invalidateQueries({ queryKey: subscriptionKeys.user(subscription.userId) });
+        queryClient.invalidateQueries({ queryKey: subscriptionKeys.userActive(subscription.userId) });
+        
+        // Invalidate user cache to trigger realtime updates
+        queryClient.invalidateQueries({ queryKey: ['user', subscription.userId] });
+        queryClient.invalidateQueries({ queryKey: ['user', subscription.userId, 'subscriptionStatus'] });
+      }
+      
       // Invalidate specific subscription and related queries
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.detail(subscriptionId) });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.stats() });
-      
-      // Get the subscription to invalidate user-specific queries
-      const subscription = queryClient.getQueryData<Subscription>(
-        subscriptionKeys.detail(subscriptionId)
-      );
-      if (subscription) {
-        queryClient.invalidateQueries({ queryKey: subscriptionKeys.user(subscription.userId) });
-        queryClient.invalidateQueries({ queryKey: subscriptionKeys.userActive(subscription.userId) });
-      }
     },
     onError: (error) => {
       console.error('Failed to cancel subscription:', error);
@@ -233,21 +260,30 @@ export function useRenewSubscription() {
   return useMutation({
     mutationFn: ({ subscriptionId, extensionDays }: { subscriptionId: string; extensionDays: number }) =>
       SubscriptionService.renewSubscription(subscriptionId, extensionDays),
-    onSuccess: (_, { subscriptionId }) => {
+    onSuccess: async (_, { subscriptionId }) => {
+      // Get the subscription to sync user status
+      const subscription = queryClient.getQueryData<Subscription>(
+        subscriptionKeys.detail(subscriptionId)
+      );
+      
+      if (subscription) {
+        // Sync active status to user document (renewal makes it active)
+        await syncSubscriptionStatusToUser(subscription.userId, 'active');
+        
+        // Invalidate user-specific queries
+        queryClient.invalidateQueries({ queryKey: subscriptionKeys.user(subscription.userId) });
+        queryClient.invalidateQueries({ queryKey: subscriptionKeys.userActive(subscription.userId) });
+        
+        // Invalidate user cache to trigger realtime updates
+        queryClient.invalidateQueries({ queryKey: ['user', subscription.userId] });
+        queryClient.invalidateQueries({ queryKey: ['user', subscription.userId, 'subscriptionStatus'] });
+      }
+      
       // Invalidate specific subscription and related queries
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.detail(subscriptionId) });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.lists() });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.stats() });
       queryClient.invalidateQueries({ queryKey: subscriptionKeys.expiring(7) });
-      
-      // Get the subscription to invalidate user-specific queries
-      const subscription = queryClient.getQueryData<Subscription>(
-        subscriptionKeys.detail(subscriptionId)
-      );
-      if (subscription) {
-        queryClient.invalidateQueries({ queryKey: subscriptionKeys.user(subscription.userId) });
-        queryClient.invalidateQueries({ queryKey: subscriptionKeys.userActive(subscription.userId) });
-      }
     },
     onError: (error) => {
       console.error('Failed to renew subscription:', error);
@@ -319,4 +355,51 @@ export function useUpdateSubscriptionCache() {
   return (subscriptionId: string, updater: (old: Subscription | null) => Subscription | null) => {
     queryClient.setQueryData(subscriptionKeys.detail(subscriptionId), updater);
   };
+}
+
+/**
+ * Helper function to sync subscription status to user document
+ */
+async function syncSubscriptionStatusToUser(
+  userId: string,
+  subscriptionStatus: Subscription['status']
+): Promise<void> {
+  try {
+    // Map subscription status to user subscription status
+    let userSubscriptionStatus: User['subscriptionStatus'];
+    
+    switch (subscriptionStatus) {
+      case 'active':
+        userSubscriptionStatus = 'active';
+        break;
+      case 'expired':
+        userSubscriptionStatus = 'expired';
+        break;
+      case 'canceled':
+      case 'pending':
+      default:
+        userSubscriptionStatus = 'free';
+        break;
+    }
+    
+    await syncUserSubscriptionStatus(userId, userSubscriptionStatus);
+  } catch (error) {
+    console.error('Failed to sync subscription status to user:', error);
+    // Don't throw error to avoid breaking the main mutation
+  }
+}
+
+/**
+ * Hook to manually sync subscription status to user document
+ */
+export function useSyncSubscriptionStatusToUser() {
+  return useMutation({
+    mutationFn: ({ userId, subscriptionStatus }: { 
+      userId: string; 
+      subscriptionStatus: Subscription['status'] 
+    }) => syncSubscriptionStatusToUser(userId, subscriptionStatus),
+    onError: (error) => {
+      console.error('Failed to sync subscription status to user:', error);
+    },
+  });
 }

@@ -1,4 +1,4 @@
-// app/(tabs)/profile.tsx - Beispiel für Hook-Integration in Tab-Screen
+// app/(tabs)/profile.tsx - German Profile Page Design
 import React from 'react';
 import {
   View,
@@ -10,78 +10,109 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 
 // ✅ Hook-Layer für deklaratives User-Management
-import { useUser, useUpdateUser, useDeleteUser } from '../../src/hooks/useUser';
+import { useUserRealtime, useUserSubscriptionStatus } from '../../src/hooks/useUser';
+import { useActiveUserSubscription } from '../../src/hooks/useSubscription';
 // ✅ Centralized Auth Store
 import { useAppStore } from '../../src/store';
+// ✅ Theme Context
+import { useTheme } from '../../src/providers/ThemeProvider';
 
 export default function ProfileTabScreen() {
   const router = useRouter();
   
-  // ✅ Use centralized auth store instead of direct Firebase calls with optimized selectors
+  // ✅ Use centralized auth store
   const currentUser = useAppStore((state) => state.user);
   const authSignOut = useAppStore((state) => state.signOut);
   const authLoading = useAppStore((state) => state.isLoading);
 
-  // ✅ Hooks - Komponente weiß nur, dass sie User-Daten braucht
-  const { data: userProfile, isLoading, error, refetch } = useUser(currentUser?.uid || '');
-  const updateUserMutation = useUpdateUser(currentUser?.uid || '');
-  const deleteUserMutation = useDeleteUser();
+  // ✅ Theme context
+  const { getBackgroundColor, getTextColor, getSurfaceColor, getBorderColor, isDark } = useTheme();
 
-  const handleEditProfile = () => {
-    if (currentUser?.uid) {
-      router.push(`/profile/${currentUser.uid}`);
-    }
-  };
+  // ✅ Hooks - User data and subscription with real-time updates
+  const { data: userProfile, isLoading, error, refetch } = useUserRealtime(currentUser?.uid || '');
+  const { data: subscriptionStatus, isLoading: subscriptionLoading } = useUserSubscriptionStatus(currentUser?.uid || '');
+  const { data: activeSubscription } = useActiveUserSubscription(currentUser?.uid || '');
 
-  const handleLogout = async () => {
-    try {
-      // ✅ Use centralized auth store signOut action
-      await authSignOut();
-      // Navigate to homepage after successful logout
-      router.replace('/');
-    } catch (error) {
-      console.error('Logout error:', error);
-      Alert.alert('Fehler', 'Logout fehlgeschlagen. Bitte versuche es erneut.');
-    }
-  };
-
-  const handleDeleteAccount = () => {
+  const handleAvatarPress = () => {
     Alert.alert(
-      'Account löschen',
-      'Möchtest du deinen Account wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.',
+      'Profilbild',
+      'Möchten Sie Ihr Profilbild ändern?',
       [
         { text: 'Abbrechen', style: 'cancel' },
-        {
-          text: 'Löschen',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              if (currentUser?.uid) {
-                // Delete user profile first
-                await deleteUserMutation.mutateAsync(currentUser.uid);
-                // Then sign out using centralized auth store
-                await authSignOut();
-                // Navigate to homepage
-                router.replace('/');
-              }
-            } catch (error) {
-              console.error('Delete account error:', error);
-              Alert.alert('Fehler', 'Account konnte nicht gelöscht werden');
-            }
-          },
-        },
+        { text: 'Foto auswählen', onPress: () => {
+          // TODO: Implement photo picker
+          console.log('Photo picker not implemented yet');
+        }},
       ]
     );
+  };
+
+  const handleMenuPress = (menuItem: string) => {
+    switch (menuItem) {
+      case 'account':
+        router.push('/account');
+        break;
+      case 'favorites':
+        // TODO: Navigate to favorites screen
+        Alert.alert('Favoriten', 'Favoriten-Funktion wird bald verfügbar sein.');
+        break;
+      case 'referral':
+        // TODO: Navigate to referral screen
+        Alert.alert('Weitersagen', 'Empfehlungsprogramm wird bald verfügbar sein.');
+        break;
+      case 'settings':
+        router.push('/profile/settings');
+        break;
+      default:
+        break;
+    }
+  };
+
+  const getMembershipStatusText = () => {
+    if (subscriptionLoading) return 'Lade Status...';
+    
+    // Use real-time subscriptionStatus from user document
+    switch (subscriptionStatus) {
+      case 'active':
+        return 'Aktives Mitglied';
+      case 'expired':
+        return 'Mitgliedschaft abgelaufen';
+      case 'free':
+      default:
+        return 'Kostenlose Mitgliedschaft';
+    }
+  };
+
+  const getMembershipStatusColor = () => {
+    // Use real-time subscriptionStatus from user document
+    switch (subscriptionStatus) {
+      case 'active':
+        return '#10B981'; // Green
+      case 'expired':
+        return '#EF4444'; // Red
+      case 'free':
+      default:
+        return '#6B7280'; // Gray
+    }
+  };
+
+  const getDisplayName = () => {
+    if (userProfile?.displayName) return userProfile.displayName;
+    if (userProfile?.firstName && userProfile?.lastName) {
+      return `${userProfile.firstName} ${userProfile.lastName}`;
+    }
+    return 'Amer Dvd'; // Default fallback as specified
   };
 
   // ✅ Loading State
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.centered]}>
+      <View style={[styles.container, styles.centered, { backgroundColor: getBackgroundColor() }]}>
         <ActivityIndicator size="large" color="#6B46C1" />
-        <Text style={styles.loadingText}>Lade Profildaten...</Text>
+        <Text style={[styles.loadingText, { color: getTextColor('secondary') }]}>Lade Profildaten...</Text>
       </View>
     );
   }
@@ -89,8 +120,8 @@ export default function ProfileTabScreen() {
   // ✅ Error State
   if (error) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <Text style={styles.errorText}>Fehler beim Laden der Profildaten</Text>
+      <View style={[styles.container, styles.centered, { backgroundColor: getBackgroundColor() }]}>
+        <Text style={[styles.errorText, { color: getTextColor('primary') }]}>Fehler beim Laden der Profildaten</Text>
         <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
           <Text style={styles.retryButtonText}>Erneut versuchen</Text>
         </TouchableOpacity>
@@ -99,77 +130,122 @@ export default function ProfileTabScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Mein Profil</Text>
-      </View>
-
-      {/* ✅ User-Daten aus Hook-Layer */}
-      <View style={styles.profileCard}>
-        <Text style={styles.cardTitle}>Profil-Informationen</Text>
-        
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Name:</Text>
-          <Text style={styles.value}>
-            {userProfile?.displayName || `${userProfile?.firstName || ''} ${userProfile?.lastName || ''}`.trim() || 'Nicht angegeben'}
-          </Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>E-Mail:</Text>
-          <Text style={styles.value}>{userProfile?.email || currentUser?.email || 'Nicht angegeben'}</Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Geschlecht:</Text>
-          <Text style={styles.value}>
-            {userProfile?.sex === 'M' ? 'Männlich' : userProfile?.sex === 'F' ? 'Weiblich' : 'Nicht angegeben'}
-          </Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Alter:</Text>
-          <Text style={styles.value}>{userProfile?.age ? `${userProfile.age} Jahre` : 'Nicht angegeben'}</Text>
-        </View>
-
-        <View style={styles.infoRow}>
-          <Text style={styles.label}>Mitglied seit:</Text>
-          <Text style={styles.value}>
-            {userProfile?.createdAt 
-              ? new Date(userProfile.createdAt.seconds * 1000).toLocaleDateString('de-DE')
-              : 'Unbekannt'
-            }
-          </Text>
-        </View>
-      </View>
-
-      {/* Action Buttons */}
-      <View style={styles.actionsCard}>
-        <TouchableOpacity style={styles.editButton} onPress={handleEditProfile}>
-          <Text style={styles.editButtonText}>Profil bearbeiten</Text>
+    <ScrollView style={[styles.container, { backgroundColor: getBackgroundColor() }]}>
+      {/* Header Area (Kopfbereich) */}
+      <View style={[styles.headerSection, { backgroundColor: getSurfaceColor(), borderBottomColor: getBorderColor() }]}>
+        {/* Avatar Placeholder */}
+        <TouchableOpacity style={styles.avatarContainer} onPress={handleAvatarPress}>
+          <View style={[styles.avatarPlaceholder, { backgroundColor: isDark ? '#374151' : '#F3F4F6', borderColor: getBorderColor() }]}>
+            <Ionicons name="camera" size={32} color={getTextColor('secondary')} />
+          </View>
         </TouchableOpacity>
 
+        {/* Username */}
+        <Text style={[styles.username, { color: getTextColor('primary') }]}>{getDisplayName()}</Text>
+
+        {/* Membership Status */}
+        <View style={[styles.membershipContainer, { backgroundColor: isDark ? '#374151' : '#F9FAFB' }]}>
+          <View style={[styles.statusIndicator, { backgroundColor: getMembershipStatusColor() }]} />
+          <Text style={[styles.membershipStatus, { color: getMembershipStatusColor() }]}>
+            {getMembershipStatusText()}
+          </Text>
+        </View>
+      </View>
+
+      {/* Menu List */}
+      <View style={[styles.menuSection, { backgroundColor: getSurfaceColor() }]}>
+        {/* Konto */}
         <TouchableOpacity 
-          style={[styles.logoutButton, authLoading && styles.disabledButton]} 
-          onPress={handleLogout}
+          style={[styles.menuItem, { borderBottomColor: getBorderColor() }]} 
+          onPress={() => handleMenuPress('account')}
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIconContainer, { backgroundColor: isDark ? '#374151' : '#F9FAFB' }]}>
+              <Ionicons name="person-outline" size={24} color="#6B46C1" />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[styles.menuTitle, { color: getTextColor('primary') }]}>Konto</Text>
+              <Text style={[styles.menuSubtitle, { color: getTextColor('secondary') }]}>Persönliche Daten und Abos</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={getTextColor('secondary')} />
+        </TouchableOpacity>
+
+        {/* Favoriten */}
+        <TouchableOpacity 
+          style={[styles.menuItem, { borderBottomColor: getBorderColor() }]} 
+          onPress={() => handleMenuPress('favorites')}
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIconContainer, { backgroundColor: isDark ? '#374151' : '#F9FAFB' }]}>
+              <Ionicons name="heart-outline" size={24} color="#EF4444" />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[styles.menuTitle, { color: getTextColor('primary') }]}>Favoriten 0</Text>
+              <Text style={[styles.menuSubtitle, { color: getTextColor('secondary') }]}>Gespeicherte Studios oder Kurse</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={getTextColor('secondary')} />
+        </TouchableOpacity>
+
+        {/* Weitersagen */}
+        <TouchableOpacity 
+          style={[styles.menuItem, { borderBottomColor: getBorderColor() }]} 
+          onPress={() => handleMenuPress('referral')}
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIconContainer, { backgroundColor: isDark ? '#374151' : '#F9FAFB' }]}>
+              <Ionicons name="gift-outline" size={24} color="#F59E0B" />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[styles.menuTitle, { color: getTextColor('primary') }]}>Weitersagen, 30 € absahnen 🎁</Text>
+              <Text style={[styles.menuSubtitle, { color: getTextColor('secondary') }]}>Empfehlungsprogramm mit Bonus</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={getTextColor('secondary')} />
+        </TouchableOpacity>
+
+        {/* Einstellungen */}
+        <TouchableOpacity 
+          style={[styles.menuItem, { borderBottomColor: getBorderColor() }]} 
+          onPress={() => handleMenuPress('settings')}
+        >
+          <View style={styles.menuItemLeft}>
+            <View style={[styles.menuIconContainer, { backgroundColor: isDark ? '#374151' : '#F9FAFB' }]}>
+              <Ionicons name="settings-outline" size={24} color={getTextColor('secondary')} />
+            </View>
+            <View style={styles.menuTextContainer}>
+              <Text style={[styles.menuTitle, { color: getTextColor('primary') }]}>Einstellungen</Text>
+              <Text style={[styles.menuSubtitle, { color: getTextColor('secondary') }]}>Sprache, Datenschutz, Benachrichtigungen</Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={20} color={getTextColor('secondary')} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Debug/Admin Actions (can be removed in production) */}
+      <View style={styles.debugSection}>
+        <TouchableOpacity 
+          style={[
+            styles.logoutButton, 
+            authLoading && styles.disabledButton,
+            { backgroundColor: isDark ? '#4B5563' : '#6B7280' }
+          ]} 
+          onPress={async () => {
+            try {
+              await authSignOut();
+              router.replace('/');
+            } catch (error) {
+              console.error('Logout error:', error);
+              Alert.alert('Fehler', 'Logout fehlgeschlagen. Bitte versuche es erneut.');
+            }
+          }}
           disabled={authLoading}
         >
           {authLoading ? (
             <ActivityIndicator size="small" color="#fff" />
           ) : (
             <Text style={styles.logoutButtonText}>Abmelden</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.deleteButton, deleteUserMutation.isPending && styles.disabledButton]} 
-          onPress={handleDeleteAccount}
-          disabled={deleteUserMutation.isPending}
-        >
-          {deleteUserMutation.isPending ? (
-            <ActivityIndicator size="small" color="#fff" />
-          ) : (
-            <Text style={styles.deleteButtonText}>Account löschen</Text>
           )}
         </TouchableOpacity>
       </View>
@@ -180,118 +256,127 @@ export default function ProfileTabScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   centered: {
     justifyContent: 'center',
     alignItems: 'center',
   },
-  header: {
-    padding: 20,
-    backgroundColor: '#fff',
+  
+  // Header Section (Kopfbereich)
+  headerSection: {
+    paddingTop: 40,
+    paddingBottom: 32,
+    paddingHorizontal: 24,
+    alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#111827',
-    textAlign: 'center',
-  },
-  profileCard: {
-    margin: 16,
-    padding: 20,
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#111827',
+  avatarContainer: {
     marginBottom: 16,
   },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+  avatarPlaceholder: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderWidth: 2,
+    borderStyle: 'dashed',
   },
-  label: {
+  username: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  membershipContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  statusIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    marginRight: 8,
+  },
+  membershipStatus: {
     fontSize: 14,
-    color: '#6b7280',
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  value: {
-    fontSize: 14,
-    color: '#111827',
-    fontWeight: '400',
-    flex: 1,
-    textAlign: 'right',
-  },
-  actionsCard: {
-    margin: 16,
-    padding: 20,
-    backgroundColor: '#fff',
+
+  // Menu Section
+  menuSection: {
+    marginTop: 16,
+    marginHorizontal: 16,
     borderRadius: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  editButton: {
-    backgroundColor: '#6B46C1',
-    paddingVertical: 12,
-    borderRadius: 8,
+  menuItem: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
   },
-  editButtonText: {
-    color: '#fff',
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  menuIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  menuTextContainer: {
+    flex: 1,
+  },
+  menuTitle: {
     fontSize: 16,
     fontWeight: '600',
+    marginBottom: 2,
+  },
+  menuSubtitle: {
+    fontSize: 13,
+  },
+
+  // Debug Section
+  debugSection: {
+    marginTop: 32,
+    marginHorizontal: 16,
+    marginBottom: 32,
   },
   logoutButton: {
-    backgroundColor: '#6b7280',
     paddingVertical: 12,
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 12,
   },
   logoutButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  deleteButton: {
-    backgroundColor: '#ef4444',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
   disabledButton: {
-    backgroundColor: '#fca5a5',
+    backgroundColor: '#D1D5DB',
   },
+
+  // Loading and Error States
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#6b7280',
   },
   errorText: {
     fontSize: 16,
-    color: '#ef4444',
     textAlign: 'center',
     marginBottom: 20,
   },
@@ -302,7 +387,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   retryButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },

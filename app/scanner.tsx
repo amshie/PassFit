@@ -1,91 +1,101 @@
-import React, { useState, useEffect , useRef} from 'react';
+import React, { useState, useRef} from 'react';
 import { StyleSheet, Text, View, Alert, TouchableOpacity } from 'react-native';
-import { Camera, CameraView, useCameraPermissions, BarcodeScanningResult } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { auth, db } from '../src/services/firebase/config';
+import { auth } from '../src/services/firebase/config';
 import { CheckInService } from '../src/services/api/checkin.service';
+import { useUserType } from '../src/hooks/useUserType';
+import { UpgradePrompt } from '../src/components/ui/UpgradePrompt';
 
 
 export default function ScannerScreen() {
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
   const scanningRef = useRef(false);
+  const { isFree } = useUserType();
 
-const handleBarCodeScanned = async ({ data }: { data: string }) => {
-  if (scanningRef.current) return;
+  const handleBarCodeScanned = async ({ data }: { data: string }) => {
+    // Check if user is premium before allowing scan
+    if (isFree) {
+      setShowUpgradePrompt(true);
+      return;
+    }
+
+    if (scanningRef.current) return;
     scanningRef.current = true;
 
-  // Vorsichtshalber: Frühzeitig beenden, wenn kein gültiger Nutzer
-  const user = auth.currentUser;
-  if (!user) {
-    Alert.alert('Fehler', 'Du musst eingeloggt sein.');
-    setScanned(false); // <-- scan wieder freigeben bei Fehler
-    return;
-  }
-
-  let payload: any;
-  try {
-    payload = JSON.parse(data);
-  } catch {
-    Alert.alert(
-      'Ungültiger QR-Code',
-      'Der Code ist kein gültiges JSON.',
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            // erst hier wieder freigeben, wenn der Nutzer OK gedrückt hat
-            scanningRef.current = false;
-          }
-        }
-      ],
-      { cancelable: false }
-    );
-    return;
-  }
-
-  if (payload.type !== 'checkin' || typeof payload.studioId !== 'string') {
-    Alert.alert(
-      'Ungültiger QR-Code',
-      'Dies ist kein Check-In-QR.',
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            scanningRef.current = false;
-          }
-        }
-      ],
-      { cancelable: false }
-    );
-    return;
-  }
-  setScanned(true);
-  
-  try {
-    const result = await CheckInService.checkAndCreate({
-      userId: user.uid,
-      studioId: payload.studioId,
-    });
-
-    if (result.alreadyCheckedIn) {
-      router.push({
-        pathname: '/progress',
-        params: { alreadyCheckedIn: 'true' },
-      });
-    } else {
-      router.push({
-        pathname: '/progress',
-        params: { newCheckIn: 'true' },
-      });
+    // Vorsichtshalber: Frühzeitig beenden, wenn kein gültiger Nutzer
+    const user = auth.currentUser;
+    if (!user) {
+      Alert.alert('Fehler', 'Du musst eingeloggt sein.');
+      scanningRef.current = false;
+      return;
     }
-  } catch (err: any) {
-    Alert.alert('Check-In fehlgeschlagen', err.message);
-    setScanned(false); // <-- scan wieder freigeben bei Fehler
-  }
-};
+
+    let payload: any;
+    try {
+      payload = JSON.parse(data);
+    } catch {
+      Alert.alert(
+        'Ungültiger QR-Code',
+        'Der Code ist kein gültiges JSON.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              scanningRef.current = false;
+            }
+          }
+        ],
+        { cancelable: false }
+      );
+      return;
+    }
+
+    if (payload.type !== 'checkin' || typeof payload.studioId !== 'string') {
+      Alert.alert(
+        'Ungültiger QR-Code',
+        'Dies ist kein Check-In-QR.',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              scanningRef.current = false;
+            }
+          }
+        ],
+        { cancelable: false }
+      );
+      return;
+    }
+    
+    setScanned(true);
+    
+    try {
+      const result = await CheckInService.checkAndCreate({
+        userId: user.uid,
+        studioId: payload.studioId,
+      });
+
+      if (result.alreadyCheckedIn) {
+        router.push({
+          pathname: '/progress',
+          params: { alreadyCheckedIn: 'true' },
+        });
+      } else {
+        router.push({
+          pathname: '/progress',
+          params: { newCheckIn: 'true' },
+        });
+      }
+    } catch (err: any) {
+      Alert.alert('Check-In fehlgeschlagen', err.message);
+      scanningRef.current = false;
+    }
+  };
 
 
   if (!permission) {
@@ -176,6 +186,14 @@ return (
           <Text style={styles.backButtonText}>Zurück zur Check-In Seite</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Upgrade Prompt for Free Users */}
+      <UpgradePrompt
+        visible={showUpgradePrompt}
+        onClose={() => setShowUpgradePrompt(false)}
+        feature="QR-Code Check-in"
+        description="QR-Code Check-ins sind nur für Premium-Nutzer verfügbar. Upgrade jetzt und erhalte Zugang zu allen exklusiven Features!"
+      />
     </SafeAreaView>
   );
 }

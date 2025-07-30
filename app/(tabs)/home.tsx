@@ -26,6 +26,9 @@ import {
   useVisibleStudios,
 } from '@/hooks';
 
+// Theme
+import { useTheme } from '../../src/providers/ThemeProvider';
+
 // Types
 import { Studio } from '@/models/studio';
 import { HomeFilters, StudioWithDistance } from '@/types/home.types';
@@ -33,6 +36,7 @@ import { HomeFilters, StudioWithDistance } from '@/types/home.types';
 export default function HomePage() {
   const router = useRouter();
   const { t } = useTranslation();
+  const { getBackgroundColor, isDark } = useTheme();
   
   // State Management
   const [selectedStudio, setSelectedStudio] = useState<Studio | null>(null);
@@ -140,8 +144,8 @@ export default function HomePage() {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="light" />
+    <View style={[styles.container, { backgroundColor: getBackgroundColor() }]}>
+      <StatusBar style={isDark ? "light" : "dark"} />
 
       {/* Search Bar */}
       <SearchBar
@@ -219,8 +223,7 @@ export default function HomePage() {
 
 const styles = StyleSheet.create({
   container: { 
-    flex: 1, 
-    backgroundColor: '#f8fafc' 
+    flex: 1,
   },
   fallbackSelectorOverlay: {
     position: 'absolute',

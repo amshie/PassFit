@@ -6,6 +6,7 @@ export interface User {
   emailVerified: boolean;
   createdAt: Date;
   updatedAt: Date;
+  subscriptionStatus?: 'active' | 'free' | 'expired';
 }
 
 export interface AuthState {

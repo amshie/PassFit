@@ -45,17 +45,26 @@ export class SubscriptionService {
    */
   static async getUserSubscriptions(userId: string): Promise<Subscription[]> {
     try {
+      // Use simpler query and sort in code to avoid index requirement
       const q = query(
         collection(db, this.COLLECTION),
-        where('userId', '==', userId),
-        orderBy('startedAt', 'desc')
+        where('userId', '==', userId)
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const subscriptions = querySnapshot.docs.map(doc => ({
         subscriptionId: doc.id,
         ...doc.data()
       })) as Subscription[];
+      
+      // Sort by startedAt in descending order
+      subscriptions.sort((a, b) => {
+        const aTime = a.startedAt.toMillis();
+        const bTime = b.startedAt.toMillis();
+        return bTime - aTime; // Descending order
+      });
+      
+      return subscriptions;
     } catch (error) {
       console.error('Error getting user subscriptions:', error);
       throw error;
@@ -67,12 +76,11 @@ export class SubscriptionService {
    */
   static async getActiveUserSubscription(userId: string): Promise<Subscription | null> {
     try {
+      // Use a simpler query to avoid composite index requirement
       const q = query(
         collection(db, this.COLLECTION),
         where('userId', '==', userId),
-        where('status', '==', 'active'),
-        orderBy('expiresAt', 'desc'),
-        limit(1)
+        where('status', '==', 'active')
       );
       
       const querySnapshot = await getDocs(q);
@@ -81,11 +89,20 @@ export class SubscriptionService {
         return null;
       }
       
-      const doc = querySnapshot.docs[0];
-      return {
+      // Convert to array and sort by expiresAt in descending order (most recent first)
+      const subscriptions = querySnapshot.docs.map(doc => ({
         subscriptionId: doc.id,
         ...doc.data()
-      } as Subscription;
+      })) as Subscription[];
+      
+      // Sort by expiresAt in descending order and return the first (most recent)
+      subscriptions.sort((a, b) => {
+        const aTime = a.expiresAt.toMillis();
+        const bTime = b.expiresAt.toMillis();
+        return bTime - aTime; // Descending order
+      });
+      
+      return subscriptions[0] || null;
     } catch (error) {
       console.error('Error getting active user subscription:', error);
       throw error;
@@ -97,17 +114,26 @@ export class SubscriptionService {
    */
   static async getSubscriptionsByPlan(planId: string): Promise<Subscription[]> {
     try {
+      // Use simpler query and sort in code to avoid index requirement
       const q = query(
         collection(db, this.COLLECTION),
-        where('planId', '==', planId),
-        orderBy('startedAt', 'desc')
+        where('planId', '==', planId)
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const subscriptions = querySnapshot.docs.map(doc => ({
         subscriptionId: doc.id,
         ...doc.data()
       })) as Subscription[];
+      
+      // Sort by startedAt in descending order
+      subscriptions.sort((a, b) => {
+        const aTime = a.startedAt.toMillis();
+        const bTime = b.startedAt.toMillis();
+        return bTime - aTime; // Descending order
+      });
+      
+      return subscriptions;
     } catch (error) {
       console.error('Error getting subscriptions by plan:', error);
       throw error;
@@ -121,17 +147,26 @@ export class SubscriptionService {
     status: Subscription['status']
   ): Promise<Subscription[]> {
     try {
+      // Use simpler query and sort in code to avoid index requirement
       const q = query(
         collection(db, this.COLLECTION),
-        where('status', '==', status),
-        orderBy('startedAt', 'desc')
+        where('status', '==', status)
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const subscriptions = querySnapshot.docs.map(doc => ({
         subscriptionId: doc.id,
         ...doc.data()
       })) as Subscription[];
+      
+      // Sort by startedAt in descending order
+      subscriptions.sort((a, b) => {
+        const aTime = a.startedAt.toMillis();
+        const bTime = b.startedAt.toMillis();
+        return bTime - aTime; // Descending order
+      });
+      
+      return subscriptions;
     } catch (error) {
       console.error('Error getting subscriptions by status:', error);
       throw error;
@@ -148,19 +183,33 @@ export class SubscriptionService {
         new Date(Date.now() + withinDays * 24 * 60 * 60 * 1000)
       );
       
+      // Use simpler query and filter/sort in code to avoid complex index requirement
       const q = query(
         collection(db, this.COLLECTION),
-        where('status', '==', 'active'),
-        where('expiresAt', '>=', now),
-        where('expiresAt', '<=', futureDate),
-        orderBy('expiresAt', 'asc')
+        where('status', '==', 'active')
       );
       
       const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map(doc => ({
+      const subscriptions = querySnapshot.docs.map(doc => ({
         subscriptionId: doc.id,
         ...doc.data()
       })) as Subscription[];
+      
+      // Filter by expiration date range and sort
+      const expiringSubscriptions = subscriptions
+        .filter(sub => {
+          const expiresAtMillis = sub.expiresAt.toMillis();
+          const nowMillis = now.toMillis();
+          const futureDateMillis = futureDate.toMillis();
+          return expiresAtMillis >= nowMillis && expiresAtMillis <= futureDateMillis;
+        })
+        .sort((a, b) => {
+          const aTime = a.expiresAt.toMillis();
+          const bTime = b.expiresAt.toMillis();
+          return aTime - bTime; // Ascending order (earliest expiration first)
+        });
+      
+      return expiringSubscriptions;
     } catch (error) {
       console.error('Error getting expiring subscriptions:', error);
       throw error;

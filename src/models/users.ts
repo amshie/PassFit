@@ -7,7 +7,7 @@ export interface User {
   displayName: string;
   createdAt: Timestamp;
   /** Denormalisierter Abo-Status für schnelle UI-Abfragen */
-  subscriptionStatus?: 'pending' | 'active' | 'canceled' | 'expired';
+  subscriptionStatus?: 'active' | 'free' | 'expired';
   /** Optional: zusätzliche Profildaten */
   firstName?: string;
   lastName?: string;

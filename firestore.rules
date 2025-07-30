@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users collection rules
+    match /users/{userId} {
+      // Users can read their own profile
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can create their own profile (during registration)
+      allow create: if request.auth != null && request.auth.uid == userId
+        && isValidUserData(request.resource.data);
+      
+      // Users can update their own profile, but NOT the subscriptionStatus field
+      allow update: if request.auth != null && request.auth.uid == userId
+        && isValidUserUpdate(request.resource.data, resource.data);
+      
+      // Users cannot delete their own profile (admin only)
+      allow delete: if false;
+    }
+    
+    // Subscriptions collection rules
+    match /subscriptions/{subscriptionId} {
+      // Users can read their own subscriptions
+      allow read: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || isAdmin());
+      
+      // Only Cloud Functions and admins can create subscriptions
+      allow create: if isCloudFunction() || isAdmin();
+      
+      // Only Cloud Functions and admins can update subscriptions
+      allow update: if isCloudFunction() || isAdmin();
+      
+      // Only Cloud Functions and admins can delete subscriptions
+      allow delete: if isCloudFunction() || isAdmin();
+    }
+    
+    // Plans collection rules (read-only for users)
+    match /plans/{planId} {
+      // Anyone can read plans (for displaying pricing)
+      allow read: if true;
+      
+      // Only admins can modify plans
+      allow write: if isAdmin();
+    }
+    
+    // Check-ins collection rules (note: collection name is 'checkIn' singular)
+    match /checkIn/{checkInId} {
+      // Users can read their own check-ins and query for their check-ins
+      allow read, list: if request.auth != null && 
+        (request.auth.uid == resource.data.userId || isAdmin());
+      
+      // Users can create their own check-ins
+      allow create: if request.auth != null && 
+        request.auth.uid == request.resource.data.userId &&
+        isValidCheckInData(request.resource.data);
+      
+      // Users cannot update or delete check-ins
+      allow update, delete: if isAdmin();
+    }
+    
+    // Studios collection rules (read-only for users)
+    match /studios/{studioId} {
+      // Anyone can read studios
+      allow read: if true;
+      
+      // Only admins can modify studios
+      allow write: if isAdmin();
+    }
+    
+    // Helper functions
+    function isValidUserData(data) {
+      return data.keys().hasAll(['uid', 'email', 'displayName']) &&
+        data.uid is string &&
+        data.email is string &&
+        data.displayName is string &&
+        // subscriptionStatus should not be set during user creation
+        !data.keys().hasAny(['subscriptionStatus']);
+    }
+    
+    function isValidUserUpdate(newData, currentData) {
+      // Check that subscriptionStatus is not being modified by the client
+      return !newData.diff(currentData).affectedKeys().hasAny(['subscriptionStatus']) &&
+        // Ensure required fields are not removed
+        newData.keys().hasAll(['uid', 'email', 'displayName']) &&
+        // Ensure uid cannot be changed
+        newData.uid == currentData.uid;
+    }
+    
+    function isValidCheckInData(data) {
+      return data.keys().hasAll(['userId', 'studioId', 'checkinTime']) &&
+        data.userId is string &&
+        data.studioId is string &&
+        data.checkinTime is timestamp;
+    }
+    
+    function isAdmin() {
+      // Check if user has admin role (you can implement custom claims)
+      return request.auth != null && 
+        request.auth.token.admin == true;
+    }
+    
+    function isCloudFunction() {
+      // Cloud Functions run with admin privileges
+      // This is automatically handled by Firebase Admin SDK
+      return request.auth == null;
+    }
+  }
+}

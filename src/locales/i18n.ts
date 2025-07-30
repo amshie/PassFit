@@ -38,4 +38,15 @@ i18n
     },
   });
 
+// Function to change app language dynamically
+export const changeAppLanguage = async (language: 'de' | 'en'): Promise<void> => {
+  try {
+    await i18n.changeLanguage(language);
+    console.log(`App language changed to: ${language}`);
+  } catch (error) {
+    console.error('Failed to change app language:', error);
+    throw error;
+  }
+};
+
 export default i18n;

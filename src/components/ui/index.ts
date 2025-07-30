@@ -10,3 +10,4 @@ export * from './StudioList';
 export * from './StudioDetails';
 export * from './StudioAdmin';
 export * from './FallbackLocationSelector';
+export * from './UpgradePrompt';

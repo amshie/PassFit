@@ -4,10 +4,15 @@ import { useCameraPermissions } from 'expo-camera';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Link, Stack, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { StatusBar } from 'expo-status-bar';
+
+// Theme
+import { useTheme } from '../../src/providers/ThemeProvider';
 
 export default function WorkoutsTab() {
   const [permission, requestPermission] = useCameraPermissions();
   const isPermissionGranted = permission?.granted;
+  const { getBackgroundColor, getSurfaceColor, getTextColor, getBorderColor, isDark } = useTheme();
 
   const handleScanPress = () => {
     if (isPermissionGranted) {
@@ -18,29 +23,30 @@ export default function WorkoutsTab() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: getBackgroundColor() }]}>
+      <StatusBar style={isDark ? "light" : "dark"} />
       <Stack.Screen options={{ title: "Check In", headerShown: false }} />
       
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.header}>
           <Ionicons name="qr-code-outline" size={60} color="#007AFF" />
-          <Text style={styles.title}>Check In</Text>
-          <Text style={styles.subtitle}>Scannen Sie QR-Codes für Ihre Trainingseinheiten</Text>
+          <Text style={[styles.title, { color: getTextColor('primary') }]}>Check In</Text>
+          <Text style={[styles.subtitle, { color: getTextColor('secondary') }]}>Scannen Sie QR-Codes für Ihre Trainingseinheiten</Text>
         </View>
 
         <View style={styles.mainContent}>
-          <View style={styles.scanSection}>
+          <View style={[styles.scanSection, { backgroundColor: getSurfaceColor() }]}>
             <View style={styles.scanIconContainer}>
               <Ionicons name="qr-code-outline" size={80} color="#007AFF" />
             </View>
             
-            <Text style={styles.scanTitle}>QR-Code Scanner</Text>
-            <Text style={styles.scanDescription}>
+            <Text style={[styles.scanTitle, { color: getTextColor('primary') }]}>QR-Code Scanner</Text>
+            <Text style={[styles.scanDescription, { color: getTextColor('secondary') }]}>
               Scannen Sie den QR-Code an Ihrem Trainingsgerät, um Ihr Workout zu starten
             </Text>
 
             {!isPermissionGranted && (
-              <View style={styles.permissionContainer}>
+              <View style={[styles.permissionContainer, { backgroundColor: isDark ? '#4B1F1F' : '#FFF5F5' }]}>
                 <Ionicons name="camera-outline" size={24} color="#FF6B6B" />
                 <Text style={styles.permissionText}>
                   Kamera-Berechtigung erforderlich
@@ -66,19 +72,19 @@ export default function WorkoutsTab() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.infoSection}>
-            <Text style={styles.infoTitle}>So funktioniert's:</Text>
+          <View style={[styles.infoSection, { backgroundColor: getSurfaceColor() }]}>
+            <Text style={[styles.infoTitle, { color: getTextColor('primary') }]}>So funktioniert's:</Text>
             <View style={styles.infoItem}>
               <Ionicons name="checkmark-circle-outline" size={20} color="#4CAF50" />
-              <Text style={styles.infoText}>QR-Code am Trainingsgerät finden</Text>
+              <Text style={[styles.infoText, { color: getTextColor('secondary') }]}>QR-Code am Trainingsgerät finden</Text>
             </View>
             <View style={styles.infoItem}>
               <Ionicons name="checkmark-circle-outline" size={20} color="#4CAF50" />
-              <Text style={styles.infoText}>Scanner öffnen und Code scannen</Text>
+              <Text style={[styles.infoText, { color: getTextColor('secondary') }]}>Scanner öffnen und Code scannen</Text>
             </View>
             <View style={styles.infoItem}>
               <Ionicons name="checkmark-circle-outline" size={20} color="#4CAF50" />
-              <Text style={styles.infoText}>Workout automatisch starten</Text>
+              <Text style={[styles.infoText, { color: getTextColor('secondary') }]}>Workout automatisch starten</Text>
             </View>
           </View>
         </View>
@@ -90,7 +96,6 @@ export default function WorkoutsTab() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
   },
   scrollContent: {
     flexGrow: 1,
@@ -103,12 +108,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: "bold",
-    color: "#333",
     marginTop: 10,
   },
   subtitle: {
     fontSize: 16,
-    color: "#666",
     textAlign: "center",
     marginTop: 5,
   },
@@ -116,7 +119,6 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scanSection: {
-    backgroundColor: "white",
     borderRadius: 15,
     padding: 30,
     alignItems: "center",
@@ -136,12 +138,10 @@ const styles = StyleSheet.create({
   scanTitle: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 10,
   },
   scanDescription: {
     fontSize: 16,
-    color: "#666",
     textAlign: "center",
     marginBottom: 20,
     lineHeight: 22,
@@ -149,7 +149,6 @@ const styles = StyleSheet.create({
   permissionContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFF5F5",
     padding: 10,
     borderRadius: 8,
     marginBottom: 20,
@@ -174,7 +173,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   infoSection: {
-    backgroundColor: "white",
     borderRadius: 15,
     padding: 20,
     shadowColor: "#000",
@@ -189,7 +187,6 @@ const styles = StyleSheet.create({
   infoTitle: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 15,
   },
   infoItem: {
@@ -199,7 +196,6 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 16,
-    color: "#666",
     marginLeft: 10,
     flex: 1,
   },

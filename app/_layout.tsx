@@ -1,6 +1,7 @@
 import "../global.css";
 import { Slot } from "expo-router";
 import { StoreProvider } from "@/store/providers/StoreProvider";
+import { ThemeProvider } from "../src/providers/ThemeProvider";
 import { useEffect } from 'react';
 import { AuthService } from '@/services/api';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -78,7 +79,9 @@ export default function RootLayout() {
       {/* ✅ QueryClientProvider für React Query Hooks */}
       <QueryClientProvider client={queryClient}>
         <StoreProvider>
-          <Slot />
+          <ThemeProvider>
+            <Slot />
+          </ThemeProvider>
         </StoreProvider>
       </QueryClientProvider>
     </GestureHandlerRootView>

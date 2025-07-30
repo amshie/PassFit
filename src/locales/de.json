@@ -62,7 +62,157 @@
     "loading": "Lade Profildaten...",
     "loadingError": "Fehler beim Laden der Profildaten",
     "saveError": "Profil konnte nicht gespeichert werden. Bitte versuche es erneut.",
-    "fillAllFields": "Bitte fülle alle Felder aus."
+    "fillAllFields": "Bitte fülle alle Felder aus.",
+    "title": "Profil",
+    "addPhoto": "Foto hinzufügen",
+    "changePhoto": "Foto ändern",
+    "membershipStatus": {
+      "active": "Aktives Mitglied",
+      "pending": "Mitgliedschaft ausstehend",
+      "canceled": "Mitgliedschaft gekündigt",
+      "expired": "Mitgliedschaft abgelaufen"
+    },
+    "menu": {
+      "account": "Konto",
+      "accountSubtitle": "Persönliche Daten und Abos",
+      "favorites": "Favoriten",
+      "favoritesCount": "Favoriten {{count}}",
+      "favoritesSubtitle": "Gespeicherte Studios oder Kurse",
+      "referral": "Weitersagen, 30 € absahnen 🎁",
+      "referralSubtitle": "Empfehlungsprogramm mit Bonus",
+      "settings": "Einstellungen",
+      "settingsSubtitle": "Sprache, Datenschutz, Benachrichtigungen"
+    }
+  },
+  "account": {
+    "title": "Konto",
+    "loading": "Lade Kontodaten...",
+    "loadingError": "Fehler beim Laden der Kontodaten",
+    "saveSuccess": "Änderungen erfolgreich gespeichert",
+    "saveError": "Fehler beim Speichern der Änderungen",
+    "subscription": {
+      "title": "Abonnement-Verwaltung",
+      "currentPlan": "Aktueller Tarif",
+      "expiresOn": "Läuft ab am",
+      "renewsOn": "Verlängert sich am",
+      "status": "Status",
+      "changePlan": "Abo ändern",
+      "cancelSubscription": "Abo kündigen",
+      "cancelConfirmTitle": "Abonnement kündigen?",
+      "cancelConfirmMessage": "Möchten Sie Ihr Abonnement wirklich kündigen? Sie können bis zum Ablaufdatum weiterhin alle Funktionen nutzen.",
+      "cancelReasonTitle": "Grund für Kündigung (optional)",
+      "cancelReasonPlaceholder": "Teilen Sie uns mit, warum Sie kündigen möchten...",
+      "confirmCancel": "Kündigung bestätigen",
+      "cancelSuccess": "Abonnement erfolgreich gekündigt",
+      "cancelError": "Fehler beim Kündigen des Abonnements",
+      "noPlan": "Kein aktives Abonnement",
+      "upgradeNow": "Jetzt upgraden",
+      "plans": {
+        "basic": "Basis",
+        "premium": "Premium",
+        "pro": "Pro"
+      }
+    },
+    "payment": {
+      "title": "Zahlungsinformationen",
+      "currentMethod": "Aktuelle Zahlungsmethode",
+      "cardEnding": "Karte endet auf",
+      "expiresOn": "Läuft ab",
+      "paypal": "PayPal",
+      "changeMethod": "Zahlungsmethode ändern",
+      "addMethod": "Zahlungsmethode hinzufügen",
+      "noMethod": "Keine Zahlungsmethode hinterlegt",
+      "updateSuccess": "Zahlungsmethode erfolgreich aktualisiert",
+      "updateError": "Fehler beim Aktualisieren der Zahlungsmethode",
+      "cardForm": {
+        "title": "Neue Kartendaten",
+        "cardNumber": "Kartennummer",
+        "expiryDate": "Ablaufdatum",
+        "cvc": "CVC",
+        "cardholderName": "Name des Karteninhabers",
+        "saveCard": "Karte speichern",
+        "cancel": "Abbrechen"
+      }
+    },
+    "billing": {
+      "title": "Rechnungs- und Buchungsverlauf",
+      "noHistory": "Keine Rechnungen vorhanden",
+      "downloadPdf": "PDF herunterladen",
+      "invoice": "Rechnung",
+      "amount": "Betrag",
+      "date": "Datum",
+      "status": "Status",
+      "paid": "Bezahlt",
+      "pending": "Ausstehend",
+      "failed": "Fehlgeschlagen",
+      "downloadError": "Fehler beim Herunterladen der Rechnung"
+    },
+    "security": {
+      "title": "Sicherheit & Login",
+      "changeEmail": "E-Mail ändern",
+      "currentEmail": "Aktuelle E-Mail",
+      "newEmail": "Neue E-Mail",
+      "confirmEmail": "E-Mail bestätigen",
+      "emailChangeSuccess": "Bestätigungsmail an neue Adresse gesendet",
+      "emailChangeError": "Fehler beim Ändern der E-Mail",
+      "changePassword": "Passwort ändern",
+      "currentPassword": "Aktuelles Passwort",
+      "newPassword": "Neues Passwort",
+      "confirmPassword": "Passwort bestätigen",
+      "passwordChangeSuccess": "Passwort erfolgreich geändert",
+      "passwordChangeError": "Fehler beim Ändern des Passworts",
+      "passwordMismatch": "Passwörter stimmen nicht überein",
+      "passwordTooWeak": "Passwort ist zu schwach",
+      "twoFactor": {
+        "title": "Zwei-Faktor-Authentifizierung",
+        "enabled": "Aktiviert",
+        "disabled": "Deaktiviert",
+        "enable": "Aktivieren",
+        "disable": "Deaktivieren",
+        "sms": "SMS-Code",
+        "app": "Authenticator-App",
+        "setupTitle": "2FA einrichten",
+        "setupInstructions": "Scannen Sie den QR-Code mit Ihrer Authenticator-App",
+        "verifyCode": "Code eingeben",
+        "setupSuccess": "2FA erfolgreich aktiviert",
+        "setupError": "Fehler beim Einrichten der 2FA",
+        "disableConfirm": "2FA wirklich deaktivieren?",
+        "disableSuccess": "2FA erfolgreich deaktiviert"
+      }
+    },
+    "privacy": {
+      "title": "Datenschutz",
+      "dataDownload": {
+        "title": "Persönliche Daten einsehen und herunterladen",
+        "description": "Laden Sie alle Ihre bei uns gespeicherten Daten herunter (DSGVO-konform)",
+        "download": "Daten herunterladen",
+        "downloadSuccess": "Download wird vorbereitet und per E-Mail zugesendet",
+        "downloadError": "Fehler beim Erstellen des Downloads"
+      },
+      "cookies": {
+        "title": "Cookie- und Tracking-Einstellungen",
+        "essential": "Notwendige Cookies",
+        "essentialDescription": "Für die Grundfunktionen der Website erforderlich",
+        "analytics": "Analyse-Cookies",
+        "analyticsDescription": "Helfen uns, die Website zu verbessern",
+        "marketing": "Marketing-Cookies",
+        "marketingDescription": "Für personalisierte Werbung",
+        "savePreferences": "Einstellungen speichern"
+      },
+      "deleteAccount": {
+        "title": "Account löschen",
+        "description": "Alle Ihre Daten werden unwiderruflich gelöscht",
+        "warning": "⚠️ Diese Aktion kann nicht rückgängig gemacht werden",
+        "confirmTitle": "Account wirklich löschen?",
+        "confirmMessage": "Alle Ihre Daten, Abonnements und der Verlauf werden permanent gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.",
+        "typeConfirm": "Geben Sie 'LÖSCHEN' ein, um zu bestätigen:",
+        "confirmText": "LÖSCHEN",
+        "deleteButton": "Account endgültig löschen",
+        "deleteSuccess": "Account erfolgreich gelöscht",
+        "deleteError": "Fehler beim Löschen des Accounts",
+        "confirmationMismatch": "Bestätigung stimmt nicht überein"
+      }
+    }
   },
   "camera": {
     "permissionLoading": "Kamera-Berechtigung wird geladen...",
@@ -85,6 +235,36 @@
   },
   "workout": {
     "startError": "Workout konnte nicht gestartet werden. Bitte versuchen Sie es erneut."
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "language": {
+      "title": "Sprache",
+      "description": "App-Sprache auswählen",
+      "error": "Fehler beim Ändern der Sprache"
+    },
+    "theme": {
+      "title": "Design",
+      "description": "App-Design auswählen",
+      "light": "Hell",
+      "dark": "Dunkel",
+      "system": "System",
+      "error": "Fehler beim Ändern des Designs"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "description": "Push-Benachrichtigungen aktivieren/deaktivieren",
+      "error": "Fehler beim Ändern der Benachrichtigungseinstellungen",
+      "permissionDenied": "Benachrichtigungsberechtigung verweigert",
+      "permissionRequired": "Benachrichtigungsberechtigung erforderlich"
+    }
+  },
+  "upgrade": {
+    "choosePlan": "Wähle deinen Tarif",
+    "vip": "VIP Tarif",
+    "gold": "Gold Tarif",
+    "vipPrice": "€ 99 / Monat",
+    "goldPrice": "€ 49 / Monat"
   },
   "accessibility": {
     "searchStudios": "Studios suchen",
