@@ -4,22 +4,61 @@ Eine moderne React Native/Expo-App für die Suche und Verwaltung von Fitness-Stu
 
 ## 🚀 Features
 
-### ✅ Implementiert
+### ✅ Vollständig Implementiert
+
+#### 🏗️ Core Features
 - **Studio-Suche mit Karte** - Google Maps Integration zur Anzeige von Studios
 - **Standortbasierte Suche** - Automatische GPS-Erkennung oder manuelle Standortauswahl
 - **Google Authentication** - Sichere Anmeldung über Google Sign-In
-- **QR-Code Scanner** - Check-in System für Studios
+- **QR-Code Scanner** - Check-in System für Studios mit Kamera-Integration
 - **Mehrsprachigkeit** - Vollständige Unterstützung für Deutsch und Englisch
 - **TypeScript Architektur** - Typsichere, modulare Codebase
 - **Responsive Design** - Optimiert für iOS, Android und Web
-- **Realtime Updates** - Firebase Firestore Integration
-- **Professionelle UI** - Moderne Benutzeroberfläche mit Loading-States
 
-### 🔄 Kürzlich Refactoriert
-- **Modulare Komponenten** - Home-Screen in wiederverwendbare Komponenten aufgeteilt
-- **Custom Hooks** - Logik-Trennung für bessere Wartbarkeit
-- **TypeScript Migration** - Vollständige Typisierung aller Komponenten
-- **Performance Optimierung** - Viewport-basierte Studio-Filterung
+#### 🎨 UI/UX System
+- **Theme System** - Light/Dark/System Modi mit automatischer Erkennung
+- **Settings-System** - Vollständige Benutzereinstellungen mit Persistierung
+- **Professionelle UI** - Moderne Benutzeroberfläche mit Loading-States
+- **Navigation** - Expo Router mit Tab-basierter Navigation
+
+#### 📊 Fortschritt & Tracking
+- **Check-In System** - Vollständige Implementierung mit Firestore-Integration
+- **Progress Tracking** - Kalender-basierte Fortschrittsverfolgung
+- **Real-time Updates** - Live-Updates ohne App-Neustart
+- **Check-In Kalender** - Interaktive Kalenderansicht mit Details
+
+#### 💎 Premium Features
+- **Subscription System** - Real-time Subscription Status Management
+- **Premium Components** - KI-Empfehlungen, Coach-Zugang, personalisierte Pläne
+- **Upgrade-System** - VIP/Gold Pläne mit Feature-Differenzierung
+- **User Type Management** - Automatische Premium/Free User Erkennung
+
+#### 🔧 Backend & Services
+- **Firebase Integration** - Vollständige Firestore-Integration
+- **Cloud Functions** - Automatische Subscription-Synchronisation
+- **Real-time Listeners** - Live-Updates für alle Datenänderungen
+- **Security Rules** - Umfassende Firestore-Sicherheitsregeln
+
+### 🔄 Kürzlich Implementiert
+- **Settings-System** - Sprache, Theme, Benachrichtigungen mit Zustand-Persistierung
+- **Real-time Subscriptions** - Live-Updates für Subscription-Status
+- **Premium Features** - KI-Empfehlungen, Coach-Zugang, personalisierte Pläne
+- **Progress Tracking** - Vollständige Check-In Historie mit Kalender
+- **Theme Provider** - Dynamisches Theme-System mit System-Integration
+- **Cloud Function Sync** - Automatische Daten-Synchronisation
+
+### 🚧 Teilweise Implementiert
+- **Payment Integration** - Datenmodelle vorhanden, Stripe/PayPal Integration ausstehend
+- **Workout Sharing** - Backend-Modelle implementiert, UI-Komponenten fehlen
+- **Push Notifications** - Grundstruktur vorhanden, vollständige Integration ausstehend
+
+### ❌ Noch Fehlend
+- **Vollständige Payment-Integration** (Stripe/PayPal)
+- **Social Features & Community**
+- **Offline-Unterstützung**
+- **Advanced Analytics**
+- **Wearable Integration**
+- **Enterprise Features**
 
 ## 🏗️ Projektstruktur
 
@@ -28,12 +67,21 @@ PassFit/
 ├── app/                          # Expo Router Pages
 │   ├── (auth)/                   # Authentifizierung
 │   ├── (tabs)/                   # Haupt-Navigation
-│   │   ├── _layout.jsx          # Tab-Layout
-│   │   ├── home.jsx             # Original Home (Legacy)
-│   │   └── home.tsx             # Refactored Home (TypeScript)
+│   │   ├── _layout.jsx          # Tab-Layout mit Theme-Integration
+│   │   ├── home.tsx             # Studio-Suche & Karte (TypeScript)
+│   │   ├── workouts.tsx         # QR-Code Scanner & Check-In
+│   │   ├── progress.tsx         # Fortschritt & Check-In Kalender
+│   │   ├── upgrade.tsx          # Premium-Pläne & Upgrade-System
+│   │   └── profile.tsx          # Benutzerprofil & Navigation
+│   ├── account/                 # Account-Management
+│   │   └── index.tsx            # Account-Übersicht mit Real-time Updates
 │   ├── profile/                 # Benutzerprofile
+│   │   ├── [uid].js             # Profil-Details
+│   │   ├── settings.tsx         # Vollständige Settings-Implementierung
+│   │   └── __tests__/           # Settings Tests
 │   ├── studio/                  # Studio-Details
-│   ├── _layout.tsx              # Root Layout
+│   │   └── [studioId].tsx       # Studio-Detailansicht
+│   ├── _layout.tsx              # Root Layout mit Theme Provider
 │   ├── index.jsx                # Landing Page
 │   └── scanner.tsx              # QR-Code Scanner
 ├── src/
@@ -43,39 +91,98 @@ PassFit/
 │   │   │   ├── Button/          # Button-Komponenten
 │   │   │   ├── Card/            # Card-Layouts
 │   │   │   ├── StudioCard/      # Studio-Karten
-│   │   │   └── StudioList/      # Studio-Listen
+│   │   │   ├── StudioList/      # Studio-Listen
+│   │   │   └── UpgradePrompt/   # Premium-Upgrade Prompts
 │   │   ├── home/                # Home-spezifische Komponenten
 │   │   │   ├── SearchBar/       # Suchleiste
 │   │   │   ├── LocationStatus/  # Standort-Anzeige
 │   │   │   ├── MapView/         # Google Maps
 │   │   │   ├── StudioBottomSheet/ # Studio-Liste
 │   │   │   └── FloatingActionButton/ # Action-Button
+│   │   ├── account/             # Account-Management Komponenten
+│   │   │   ├── SubscriptionSection/ # Subscription-Status & Management
+│   │   │   ├── PaymentSection/  # Payment-Management
+│   │   │   ├── BillingHistorySection/ # Rechnungshistorie
+│   │   │   ├── SecuritySection/ # Sicherheitseinstellungen
+│   │   │   └── PrivacySection/  # Datenschutz-Einstellungen
+│   │   ├── settings/            # Settings-Komponenten
+│   │   │   ├── SettingsNotifications.tsx # Benachrichtigungs-Toggle
+│   │   │   └── index.ts         # Settings-Exports
+│   │   ├── premium/             # Premium-Features
+│   │   │   ├── AIRecommendations.tsx # KI-Empfehlungen
+│   │   │   ├── CoachAccess.tsx  # Coach-Zugang
+│   │   │   └── PersonalizedPlans.tsx # Personalisierte Pläne
+│   │   ├── demo/                # Demo & Testing
+│   │   │   └── RealtimeDemo.tsx # Real-time Subscription Demo
+│   │   ├── test/                # Test-Komponenten
 │   │   └── forms/               # Formular-Komponenten
 │   ├── hooks/                   # Custom React Hooks
 │   │   ├── useUserLocation.ts   # GPS & Standort-Management
 │   │   ├── useMapRegion.ts      # Karten-Region Management
 │   │   ├── useVisibleStudios.ts # Studio-Filterung
-│   │   └── useRecenter.ts       # Karten-Zentrierung
+│   │   ├── useRecenter.ts       # Karten-Zentrierung
+│   │   ├── useUser.ts           # User-Management mit Real-time Updates
+│   │   ├── useSubscription.ts   # Subscription-Management
+│   │   ├── useUserType.ts       # Premium/Free User Detection
+│   │   ├── useCheckIn.ts        # Check-In Management
+│   │   ├── useStudio.ts         # Studio-Daten Management
+│   │   └── usePlan.ts           # Plan-Management
 │   ├── services/                # Business Logic & APIs
 │   │   ├── api/                 # Service Layer
+│   │   │   ├── checkin.service.ts # Check-In Service
+│   │   │   └── studio.service.ts # Studio Service
 │   │   ├── firebase/            # Firebase Integration
+│   │   │   ├── config.ts        # Firebase Konfiguration
+│   │   │   └── userService.ts   # User Service mit Real-time
 │   │   └── qr-scanner.service.ts # QR-Code Service
 │   ├── store/                   # State Management
-│   │   ├── slices/              # Redux-ähnliche Slices
-│   │   └── providers/           # Context Provider
+│   │   ├── slices/              # Zustand Slices
+│   │   │   ├── settingsSlice.ts # Settings State Management
+│   │   │   └── __tests__/       # Store Tests
+│   │   ├── providers/           # Context Provider
+│   │   └── index.ts             # Store Configuration
+│   ├── providers/               # React Context Providers
+│   │   └── ThemeProvider.tsx    # Theme Provider mit System-Integration
 │   ├── types/                   # TypeScript Definitionen
 │   │   ├── map.types.ts         # Karten-Typen
 │   │   ├── home.types.ts        # Home-Komponenten Typen
-│   │   └── user.types.ts        # Benutzer-Typen
+│   │   ├── user.types.ts        # Benutzer-Typen
+│   │   ├── auth.types.ts        # Authentifizierungs-Typen
+│   │   └── workout.types.ts     # Workout-Typen
 │   ├── locales/                 # Internationalisierung
-│   │   ├── de.json              # Deutsche Übersetzungen
-│   │   ├── en.json              # Englische Übersetzungen
-│   │   └── i18n.ts              # i18n Konfiguration
+│   │   ├── de.json              # Deutsche Übersetzungen (erweitert)
+│   │   ├── en.json              # Englische Übersetzungen (erweitert)
+│   │   └── i18n.ts              # i18n Konfiguration mit Dynamic Loading
 │   ├── models/                  # Datenmodelle
+│   │   ├── users.ts             # User-Modell
+│   │   ├── studio.ts            # Studio-Modell
+│   │   ├── checkIn.ts           # Check-In Modell
+│   │   ├── subscription.ts      # Subscription-Modell
+│   │   ├── plan.ts              # Plan-Modell
+│   │   ├── payment.ts           # Payment-Modell
+│   │   ├── GymPass.ts           # GymPass-Modell
+│   │   ├── workoutShare.ts      # Workout-Sharing Modell
+│   │   └── index.ts             # Model-Exports
 │   ├── utils/                   # Utility Functions
+│   │   ├── constants.ts         # App-Konstanten
+│   │   ├── formatters.ts        # Daten-Formatierung
+│   │   ├── validation.ts        # Validierungs-Funktionen
+│   │   └── web-mocks/           # Web-Platform Mocks
 │   └── styles/                  # Theme & Styling
+│       ├── theme.ts             # Theme-Definitionen
+│       └── index.ts             # Style-Exports
+├── functions/                   # Firebase Cloud Functions
+│   ├── src/                     # Function Source Code
+│   │   ├── index.ts             # Function Exports
+│   │   ├── syncSubscriptionStatus.ts # Subscription Sync
+│   │   └── setDefaultSubscription.ts # Default Subscription Setup
+│   ├── package.json             # Function Dependencies
+│   └── tsconfig.json            # TypeScript Config
 └── docs/                        # Dokumentation
     ├── GOOGLE_AUTH_SETUP.md     # Google Auth Setup
+    ├── GOOGLE_MAPS_SETUP.md     # Google Maps Setup
+    ├── ENVIRONMENT_SETUP.md     # Environment Setup
+    ├── DEV_CLIENT_SETUP.md      # Development Client Setup
     └── REACT_QUERY_HOOKS_GUIDE.md # React Query Guide
 ```
 
@@ -182,10 +289,29 @@ Folge der detaillierten Anleitung in [`docs/GOOGLE_AUTH_SETUP.md`](docs/GOOGLE_A
 3. Erstelle einen API-Schlüssel für Google Maps
 
 ### 6. App starten
-```bash
-# Entwicklungsserver starten
-npm start
 
+#### Option 1: Development Client (Empfohlen für QR-Code Funktionalität)
+Aufgrund des benutzerdefinierten URL-Schemas (`passfit://`) funktioniert Expo Go nicht korrekt. Verwende stattdessen den Development Client:
+
+```bash
+# Prerequisites prüfen
+npm run dev-client:check
+
+# Development Client bauen
+npm run build:dev-client:android  # Für Android
+npm run build:dev-client:ios      # Für iOS
+
+# Development Server starten
+npm run start:dev-client
+
+# Bei Netzwerkproblemen: Tunnel-Modus
+npm run start:dev-client:tunnel
+```
+
+**Wichtig**: Installiere die generierte APK/IPA auf deinem Gerät und verwende den **PassFit Development Client** (NICHT Expo Go) zum Scannen der QR-Codes.
+
+#### Option 2: Direkte Geräte-Installation
+```bash
 # iOS Simulator
 npm run ios
 
@@ -195,6 +321,14 @@ npm run android
 # Web (eingeschränkte Funktionalität)
 npm run web
 ```
+
+#### Option 3: Standard Expo Go (Eingeschränkt)
+```bash
+# Entwicklungsserver starten
+npm start
+```
+
+**Hinweis**: Bei "Keine Daten verfügbar" beim QR-Code scannen, siehe [Development Client Setup Guide](docs/DEV_CLIENT_SETUP.md).
 
 ## 🎯 Verwendung
 
@@ -216,11 +350,26 @@ npm run web
 - **Check-In**: Automatisches Check-In in Studios
 - **Berechtigungen**: Kamera-Zugriff mit Benutzerfreundlichen Prompts
 
+#### Settings & Personalisierung
+- **Sprache**: Dynamischer Wechsel zwischen Deutsch und Englisch
+- **Theme**: Light/Dark/System Modi mit automatischer Erkennung
+- **Benachrichtigungen**: Toggle für Push-Benachrichtigungen
+- **Persistierung**: Alle Einstellungen werden automatisch gespeichert
+
+#### Progress Tracking
+- **Check-In Kalender**: Interaktive Kalenderansicht mit Check-In Historie
+- **Studio-Details**: Detaillierte Informationen zu jedem Check-In
+- **Real-time Updates**: Live-Updates ohne App-Neustart
+- **Premium Features**: KI-Empfehlungen und Coach-Zugang für Premium-User
+
 ### Navigation
 - **Home** (`/(tabs)/home`): Hauptbildschirm mit Karte und Studio-Suche
-- **Profile** (`/profile/[uid]`): Benutzerprofile anzeigen
-- **Studio Details** (`/studio/[studioId]`): Detailansicht einzelner Studios
-- **Scanner** (`/scanner`): QR-Code Scanner für Check-Ins
+- **Check In** (`/(tabs)/workouts`): QR-Code Scanner für Check-Ins
+- **Progress** (`/(tabs)/progress`): Fortschrittsverfolgung mit Kalender
+- **Upgrade** (`/(tabs)/upgrade`): Premium-Pläne und Upgrade-Optionen
+- **Profile** (`/(tabs)/profile`): Benutzerprofil und Settings-Zugang
+- **Settings** (`/profile/settings`): Vollständige Einstellungen
+- **Account** (`/account`): Account-Management mit Real-time Updates
 
 ## 🏛️ Architektur-Prinzipien
 
@@ -233,38 +382,38 @@ Business Logic Layer (Hooks/Services)
 Data Layer (Firebase/API)
 ```
 
-### Refactoring-Erfolge
-Das Projekt wurde kürzlich von einer monolithischen Struktur zu einer modularen Architektur refactoriert:
+### Implementierungs-Erfolge
+Das Projekt wurde erfolgreich von einer monolithischen Struktur zu einer modernen, modularen Architektur entwickelt:
 
-- **Vorher**: 600+ Zeilen in einer einzigen `home.jsx` Datei
-- **Nachher**: Modulare Komponenten mit klarer Verantwortungstrennung
-- **Verbesserungen**:
-  - Bessere Wartbarkeit durch kleinere, fokussierte Komponenten
-  - TypeScript Integration für Type Safety
-  - Custom Hooks für Logik-Wiederverwendung
-  - Performance-Optimierungen durch Viewport-Filterung
+- **Modulare Komponenten** - Klare Verantwortungstrennung
+- **TypeScript Integration** - Vollständige Type Safety
+- **Custom Hooks** - Wiederverwendbare Logik-Extraktion
+- **Real-time System** - Live-Updates ohne App-Neustart
+- **Theme System** - Dynamisches Theme-Management
+- **Settings Persistierung** - Benutzereinstellungen überleben App-Neustarts
 
 ### Design Patterns
 - **Component Composition** - Wiederverwendbare UI-Komponenten
 - **Custom Hooks Pattern** - Logik-Extraktion und -Wiederverwendung
 - **Service Layer Pattern** - API-Abstraktion
 - **Observer Pattern** - Realtime Updates mit Firebase
+- **Provider Pattern** - Theme und Settings Management
 
 ### State Management
 - **React Query** - Server State Management mit Caching
 - **Zustand** - Leichtgewichtiges Client State Management
 - **AsyncStorage** - Persistente lokale Datenspeicherung
-- **Context API** - Globale App-States
+- **Context API** - Globale App-States (Theme, Settings)
 
 ## 🌍 Internationalisierung
 
-Die App unterstützt vollständige Mehrsprachigkeit:
+Die App unterstützt vollständige Mehrsprachigkeit mit dynamischem Sprachwechsel:
 
 ### Unterstützte Sprachen
 - **Deutsch** (`de`) - Vollständig implementiert
 - **Englisch** (`en`) - Vollständig implementiert
 
-### Übersetzungsstruktur
+### Erweiterte Übersetzungsstruktur
 ```json
 {
   "common": { /* Allgemeine UI-Elemente */ },
@@ -272,6 +421,9 @@ Die App unterstützt vollständige Mehrsprachigkeit:
   "studios": { /* Studio-Suche und -Anzeige */ },
   "auth": { /* Authentifizierung */ },
   "camera": { /* QR-Scanner */ },
+  "settings": { /* Settings-System */ },
+  "upgrade": { /* Premium-Features */ },
+  "progress": { /* Fortschrittsverfolgung */ },
   "accessibility": { /* Barrierefreiheit */ }
 }
 ```
@@ -281,7 +433,7 @@ Die App unterstützt vollständige Mehrsprachigkeit:
 import { useTranslation } from 'react-i18next';
 
 const { t } = useTranslation();
-const text = t('studios.loading'); // "Studios werden geladen..."
+const text = t('settings.language.german'); // "Deutsch"
 ```
 
 ## 🧪 Testing & Qualitätssicherung
@@ -299,10 +451,10 @@ npm run format
 ```
 
 ### Testing-Strategien
-- **Component Testing** - Einzelne Komponenten isoliert testen
+- **Component Testing** - Settings-Komponenten vollständig getestet
 - **Hook Testing** - Custom Hooks mit React Testing Library
-- **Integration Testing** - Vollständige User-Flows
-- **E2E Testing** - End-to-End Tests mit Detox (geplant)
+- **Integration Testing** - Real-time Subscription Flow
+- **Manual Testing** - Umfassende Checklisten für alle Features
 
 ## 📦 Build & Deployment
 
@@ -337,31 +489,37 @@ eas update --branch production
 
 ### Verfügbare Scripts
 ```bash
-npm start          # Expo Development Server
-npm run android    # Android Development Build
-npm run ios        # iOS Development Build
-npm run web        # Web Development (eingeschränkt)
+npm start                        # Expo Development Server
+npm run start:dev-client         # Development Client Server
+npm run android                  # Android Development Build
+npm run ios                      # iOS Development Build
+npm run web                      # Web Development (eingeschränkt)
+npm run build:dev-client:android # Android Development Client Build
+npm run build:dev-client:ios     # iOS Development Client Build
 ```
 
 ### Entwicklungsworkflow
 1. **Feature Branch** erstellen
 2. **TypeScript** für neue Komponenten verwenden
-3. **Übersetzungen** für neue Texte hinzufügen
+3. **Übersetzungen** für neue Texte hinzufügen (Deutsch & Englisch)
 4. **Tests** für neue Funktionalität schreiben
-5. **Code Review** vor Merge
+5. **Theme-Kompatibilität** sicherstellen
+6. **Code Review** vor Merge
 
 ### Code-Standards
 - **TypeScript First** - Alle neuen Dateien in TypeScript
 - **Component-First** - Wiederverwendbare Komponenten bevorzugen
 - **Hook-Pattern** - Logik in Custom Hooks extrahieren
+- **Theme-Aware** - Alle Komponenten unterstützen Light/Dark Mode
 - **Accessibility** - ARIA-Labels und Screen Reader Support
+- **i18n Ready** - Alle Texte über Übersetzungssystem
 
 ## 🐛 Bekannte Probleme & Lösungen
 
 ### Web-Kompatibilität
 - **Problem**: `react-native-maps` funktioniert nicht vollständig im Web
 - **Lösung**: Fallback-UI für Web-Plattform implementiert
-- **Status**: Web-Version zeigt Warnung, aber App funktioniert
+- **Status**: ✅ Web-Version zeigt Warnung, aber App funktioniert
 
 ### Performance
 - **Problem**: Große Anzahl von Studios kann Performance beeinträchtigen
@@ -373,26 +531,62 @@ npm run web        # Web Development (eingeschränkt)
 - **Lösung**: Fallback-Standortauswahl implementiert
 - **Status**: ✅ Benutzerfreundliche Lösung verfügbar
 
+### Development Client
+- **Problem**: QR-Code Scanner funktioniert nicht in Expo Go
+- **Lösung**: Development Client Setup implementiert
+- **Status**: ✅ Vollständige Anleitung in docs/DEV_CLIENT_SETUP.md
+
 ## 📋 Roadmap
 
-### Phase 1: Core Features (✅ Abgeschlossen)
+### Phase 1: Core Features (✅ Vollständig Abgeschlossen)
 - [x] Studio-Suche mit Google Maps
 - [x] Google Authentication
-- [x] QR-Code Scanner
-- [x] Mehrsprachigkeit
+- [x] QR-Code Scanner mit Kamera-Integration
+- [x] Mehrsprachigkeit (Deutsch/Englisch)
 - [x] TypeScript Migration
+- [x] Theme System (Light/Dark/System)
+- [x] Settings-System mit Persistierung
+- [x] Real-time Firebase Integration
 
-### Phase 2: Erweiterte Features (🔄 In Arbeit)
-- [ ] Workout-Tracking System
-- [ ] Benutzer-Dashboard mit Statistiken
-- [ ] Push-Benachrichtigungen
-- [ ] Offline-Unterstützung
+### Phase 2: Erweiterte Features (✅ Vollständig Abgeschlossen)
+- [x] Check-In System mit Firestore-Integration
+- [x] Progress Tracking mit Kalender-Ansicht
+- [x] Real-time Subscription Status Updates
+- [x] Premium/Free User Management
+- [x] Cloud Functions für Daten-Synchronisation
+- [x] Comprehensive Security Rules
+- [x] Account-Management System
 
-### Phase 3: Premium Features (📋 Geplant)
+### Phase 3: Premium Features (✅ Grundstruktur Implementiert)
+- [x] Premium Components (KI-Empfehlungen, Coach-Zugang)
+- [x] Upgrade-System (VIP/Gold Pläne)
+- [x] User Type Detection & Management
+- [x] Premium Feature Gating
+- [ ] **Vollständige Payment-Integration** (Stripe/PayPal) - 🚧 In Arbeit
+- [ ] **Erweiterte KI-Empfehlungen** - 📋 Geplant
+- [ ] **Live Coach-Sessions** - 📋 Geplant
+
+### Phase 4: Social & Community Features (📋 Geplant)
+- [ ] Workout-Sharing System (Backend-Modelle vorhanden)
 - [ ] Social Features & Community
+- [ ] Freunde-System & Challenges
+- [ ] Leaderboards & Achievements
+- [ ] Community-Events & Meetups
+
+### Phase 5: Advanced Features (📋 Geplant)
+- [ ] Push-Benachrichtigungen (Grundstruktur vorhanden)
+- [ ] Offline-Unterstützung mit Sync
+- [ ] Advanced Analytics & Insights
+- [ ] Wearable Integration (Apple Watch, Fitbit)
 - [ ] Premium-Studio-Partnerschaften
-- [ ] Advanced Analytics
-- [ ] Wearable Integration
+- [ ] Multi-Tenant Support
+
+### Phase 6: Enterprise Features (🔮 Zukunft)
+- [ ] Studio-Owner Dashboard
+- [ ] Business Analytics für Studios
+- [ ] White-Label Solutions
+- [ ] API für Drittanbieter-Integration
+- [ ] Advanced Reporting & Insights
 
 ## 🤝 Contributing
 
@@ -409,6 +603,7 @@ npm run web        # Web Development (eingeschränkt)
 ### Code-Richtlinien
 - **TypeScript verwenden** für alle neuen Dateien
 - **Komponenten dokumentieren** mit JSDoc-Kommentaren
+- **Theme-Kompatibilität** sicherstellen (Light/Dark Mode)
 - **Accessibility beachten** - ARIA-Labels hinzufügen
 - **Übersetzungen pflegen** - Texte in beiden Sprachen
 - **Performance berücksichtigen** - useMemo/useCallback verwenden
@@ -436,10 +631,4 @@ Bei Fragen oder Problemen:
 - **Firebase** - Für Backend-as-a-Service Lösung
 - **Google Maps** - Für Karten-Integration
 - **React Native Community** - Für Open-Source Bibliotheken
-- **TypeScript Team** - Für Type Safety und Developer Experience
-
----
-
-**PassFit** - Entwickelt mit ❤️ für die Fitness-Community
-
-*Letzte Aktualisierung: July 2025*
+- **TypeScript Team** - Für Type Safety

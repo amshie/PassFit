@@ -1,5 +1,6 @@
 // src/config/firebaseConfig.ts
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
 const isWeb = Platform.OS === 'web';
 
@@ -7,43 +8,35 @@ let firebaseApp: any;
 let firebaseAuth: any;
 let firebaseDb: any;
 
-if (isWeb) {
-  // For web, use a simple mock configuration to avoid import.meta issues
-  firebaseApp = {
-    name: 'mock-app',
-    options: {}
-  };
-  firebaseAuth = {
+try {
+  // Import Firebase services from the main firebase.js configuration
+  const { app, auth, db } = require('../../firebase');
+  
+  firebaseApp = app;
+  firebaseAuth = auth;
+  firebaseDb = db;
+} catch (error) {
+  console.error('Failed to initialize Firebase config:', error);
+  
+  // Fallback to minimal services only if Firebase completely fails
+  firebaseApp = { name: 'fallback-app' };
+  firebaseAuth = { 
     currentUser: null,
-    signInWithEmailAndPassword: () => Promise.resolve({ user: { uid: 'mock-uid', email: 'test@example.com' } }),
-    createUserWithEmailAndPassword: () => Promise.resolve({ user: { uid: 'mock-uid', email: 'test@example.com' } }),
-    signOut: () => Promise.resolve(),
+    signInWithEmailAndPassword: () => Promise.reject(new Error('Firebase not initialized')),
+    createUserWithEmailAndPassword: () => Promise.reject(new Error('Firebase not initialized')),
+    signOut: () => Promise.reject(new Error('Firebase not initialized')),
     onAuthStateChanged: () => () => {}
   };
-  firebaseDb = {
-    collection: () => ({
+  firebaseDb = { 
+    collection: () => ({ 
       doc: () => ({
-        get: () => Promise.resolve({ exists: false, data: () => null }),
-        set: () => Promise.resolve(),
-        update: () => Promise.resolve(),
-        delete: () => Promise.resolve()
-      })
-    })
+        get: () => Promise.reject(new Error('Firebase not initialized')),
+        set: () => Promise.reject(new Error('Firebase not initialized')),
+        update: () => Promise.reject(new Error('Firebase not initialized')),
+        delete: () => Promise.reject(new Error('Firebase not initialized'))
+      }) 
+    }) 
   };
-} else {
-  // For native platforms, use the actual Firebase config
-  try {
-    const { app, auth, db } = require('../../firebase');
-    firebaseApp = app;
-    firebaseAuth = auth;
-    firebaseDb = db;
-  } catch (error) {
-    console.warn('Firebase native config not available:', error);
-    // Fallback to mock for development
-    firebaseApp = { name: 'fallback-app' };
-    firebaseAuth = { currentUser: null };
-    firebaseDb = { collection: () => ({ doc: () => ({}) }) };
-  }
 }
 
 export { firebaseApp, firebaseAuth, firebaseDb };

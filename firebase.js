@@ -1,85 +1,105 @@
-//Erweitern: Weitere Hooks für andere Models (Studio, Subscription, etc.) erstellen// firebase.js
+// firebase.js
 import { Platform } from 'react-native';
 
 const isWeb = Platform.OS === 'web';
 
-let app, auth, db, analytics;
-
 if (isWeb) {
-  // For web, export mock Firebase services to avoid import.meta issues
-  app = { name: 'mock-app' };
-  auth = {
-    currentUser: null,
-    signInWithEmailAndPassword: () => Promise.resolve({ user: { uid: 'mock-uid', email: 'test@example.com' } }),
-    createUserWithEmailAndPassword: () => Promise.resolve({ user: { uid: 'mock-uid', email: 'test@example.com' } }),
-    signOut: () => Promise.resolve(),
-    onAuthStateChanged: () => () => {}
-  };
-  db = {
-    collection: () => ({
-      doc: () => ({
-        get: () => Promise.resolve({ exists: false, data: () => null }),
-        set: () => Promise.resolve(),
-        update: () => Promise.resolve(),
-        delete: () => Promise.resolve()
-      })
-    })
-  };
-  analytics = null;
+  // For web, use the web-specific Firebase configuration
+  module.exports = require('./firebase.web.js');
 } else {
-  // For native platforms, use the actual Firebase configuration
-  const { initializeApp } = require('firebase/app');
-  const { getFirestore } = require('firebase/firestore');  
-  const {
-    initializeAuth,
-    getReactNativePersistence
-  } = require('firebase/auth');
-  const AsyncStorage = require('@react-native-async-storage/async-storage').default;
-  const { getAnalytics, isSupported } = require('firebase/analytics');
-
-  let FIREBASE_API_KEY, FIREBASE_AUTH_DOMAIN, FIREBASE_PROJECT_ID, FIREBASE_STORAGE_BUCKET, FIREBASE_MESSAGING_SENDER_ID, FIREBASE_APP_ID, FIREBASE_MEASUREMENT_ID;
+  // For Expo managed workflow, use the standard Firebase SDK with proper configuration
+  const Constants = require('expo-constants').default;
   
+  // Get environment variables from Constants or fallback to defaults
+  const getEnvVar = (key) => {
+    try {
+      return Constants.expoConfig?.extra?.[key] || Constants.manifest?.extra?.[key];
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Firebase configuration with environment variables or defaults
+  const firebaseConfig = {
+    apiKey: getEnvVar('FIREBASE_API_KEY') || "AIzaSyD6jusepa71b3CPvap0-IAIBf1ObdLAgc4",
+    authDomain: getEnvVar('FIREBASE_AUTH_DOMAIN') || "fitnesspass-a54cb.firebaseapp.com",
+    projectId: getEnvVar('FIREBASE_PROJECT_ID') || "fitnesspass-a54cb",
+    storageBucket: getEnvVar('FIREBASE_STORAGE_BUCKET') || "fitnesspass-a54cb.firebasestorage.app",
+    messagingSenderId: getEnvVar('FIREBASE_MESSAGING_SENDER_ID') || "583767453466",
+    appId: getEnvVar('FIREBASE_APP_ID') || "1:583767453466:web:bc6b02d39a2b94764106a3",
+    measurementId: getEnvVar('FIREBASE_MEASUREMENT_ID') || "G-54844JZSES",
+  };
+
+  let app, auth, db, analytics;
+
   try {
-    const env = require('@env');
-    FIREBASE_API_KEY = env.FIREBASE_API_KEY;
-    FIREBASE_AUTH_DOMAIN = env.FIREBASE_AUTH_DOMAIN;
-    FIREBASE_PROJECT_ID = env.FIREBASE_PROJECT_ID;
-    FIREBASE_STORAGE_BUCKET = env.FIREBASE_STORAGE_BUCKET;
-    FIREBASE_MESSAGING_SENDER_ID = env.FIREBASE_MESSAGING_SENDER_ID;
-    FIREBASE_APP_ID = env.FIREBASE_APP_ID;
-    FIREBASE_MEASUREMENT_ID = env.FIREBASE_MEASUREMENT_ID;
+    // For Expo managed workflow, use the standard Firebase SDK
+    const { initializeApp, getApps } = require('firebase/app');
+    const { getFirestore, connectFirestoreEmulator } = require('firebase/firestore');  
+    const {
+      getAuth,
+      initializeAuth,
+      getReactNativePersistence
+    } = require('firebase/auth');
+    const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+    const { getAnalytics, isSupported } = require('firebase/analytics');
+
+    // Initialize Firebase for native (only if not already initialized)
+    app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+    db = getFirestore(app);
+
+    // Initialize Auth with AsyncStorage persistence for native
+    try {
+      auth = getAuth(app);
+    } catch (authError) {
+      // If getAuth fails, try initializeAuth with persistence
+      auth = initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage),
+      });
+    }
+
+    // Analytics for native (if supported)
+    analytics = null;
+    (async () => {
+      try {
+        if (await isSupported()) {
+          analytics = getAnalytics(app);
+        }
+      } catch (error) {
+        console.warn('Analytics not supported:', error);
+      }
+    })();
+
+    console.log('Firebase initialized successfully for Expo managed workflow');
   } catch (error) {
-    console.warn('Environment variables not available, using defaults');
+    console.error('Failed to initialize Firebase for native:', error);
+    
+    // Fallback services with proper error handling
+    app = { 
+      name: 'native-fallback',
+      options: firebaseConfig,
+      utils: () => ({})
+    };
+    auth = { 
+      currentUser: null,
+      signInWithEmailAndPassword: () => Promise.reject(new Error('Firebase not initialized')),
+      createUserWithEmailAndPassword: () => Promise.reject(new Error('Firebase not initialized')),
+      signOut: () => Promise.reject(new Error('Firebase not initialized')),
+      onAuthStateChanged: () => () => {},
+      signInWithCredential: () => Promise.reject(new Error('Firebase not initialized'))
+    };
+    db = { 
+      collection: () => ({ 
+        doc: () => ({
+          get: () => Promise.reject(new Error('Firebase not initialized')),
+          set: () => Promise.reject(new Error('Firebase not initialized')),
+          update: () => Promise.reject(new Error('Firebase not initialized')),
+          delete: () => Promise.reject(new Error('Firebase not initialized'))
+        }) 
+      }) 
+    };
+    analytics = null;
   }
 
-  // Firebase configuration with your actual project values
-  const firebaseConfig = {
-    apiKey: FIREBASE_API_KEY || "AIzaSyD6jusepa71b3CPvap0-IAIBf1ObdLAgc4",
-    authDomain: FIREBASE_AUTH_DOMAIN || "fitnesspass-a54cb.firebaseapp.com",
-    projectId: FIREBASE_PROJECT_ID || "fitnesspass-a54cb",
-    storageBucket: FIREBASE_STORAGE_BUCKET || "fitnesspass-a54cb.firebasestorage.app",
-    messagingSenderId: FIREBASE_MESSAGING_SENDER_ID || "583767453466",
-    appId: FIREBASE_APP_ID || "1:583767453466:web:bc6b02d39a2b94764106a3",
-    measurementId: FIREBASE_MEASUREMENT_ID || "G-54844JZSES",
-  };
-
-  // App initialisieren
-  app = initializeApp(firebaseConfig);
-
-  db = getFirestore(app);
-
-  // Auth mit AsyncStorage-Persistence
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage),
-  });
-
-  // Analytics nur, wenn unterstützt
-  analytics = null;
-  (async () => {
-    if (await isSupported()) {
-      analytics = getAnalytics(app);
-    }
-  })();
+  module.exports = { app, auth, db, analytics };
 }
-
-export { app, auth, db, analytics };

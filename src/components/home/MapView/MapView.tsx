@@ -15,15 +15,27 @@ import { useRecenter } from '../../../hooks/useRecenter';
 
 // Conditional imports for platform compatibility
 let MapView: any, Marker: any, PROVIDER_GOOGLE: any;
+
+// Only import react-native-maps on native platforms
 if (Platform.OS !== 'web') {
   try {
+    // Use dynamic import to avoid Metro bundling issues on web
     const Maps = require('react-native-maps');
-    MapView = Maps.default;
+    MapView = Maps.default || Maps;
     Marker = Maps.Marker;
     PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
   } catch (error) {
     console.warn('react-native-maps not available on this platform');
+    // Fallback components for native platforms when maps fail
+    MapView = ({ children, ...props }: any) => <View {...props}>{children}</View>;
+    Marker = (props: any) => <View {...props} />;
+    PROVIDER_GOOGLE = 'google';
   }
+} else {
+  // Web fallback components
+  MapView = ({ children, ...props }: any) => <View {...props}>{children}</View>;
+  Marker = (props: any) => <View {...props} />;
+  PROVIDER_GOOGLE = 'google';
 }
 
 export const GoogleMapView: React.FC<MapViewProps> = ({

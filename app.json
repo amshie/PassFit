@@ -13,10 +13,31 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "extra": {
+      "GOOGLE_WEB_CLIENT_ID": "583767453466-hhre84pr2c3p21d228c3tge4ngor8k7r.apps.googleusercontent.com",
+      "GOOGLE_IOS_CLIENT_ID": "583767453466-76jgmbgv7fpsa0072c5lhv5m7avsjrtd.apps.googleusercontent.com",
+      "GOOGLE_ANDROID_CLIENT_ID": "583767453466-nb7fe2fqlvql54m24potsmoa8iie5s23.apps.googleusercontent.com",
+      "FIREBASE_API_KEY": "AIzaSyD6jusepa71b3CPvap0-IAIBf1ObdLAgc4",
+      "FIREBASE_AUTH_DOMAIN": "fitnesspass-a54cb.firebaseapp.com",
+      "FIREBASE_PROJECT_ID": "fitnesspass-a54cb",
+      "FIREBASE_STORAGE_BUCKET": "fitnesspass-a54cb.firebasestorage.app",
+      "FIREBASE_MESSAGING_SENDER_ID": "583767453466",
+      "FIREBASE_APP_ID": "1:583767453466:web:bc6b02d39a2b94764106a3",
+      "FIREBASE_MEASUREMENT_ID": "G-54844JZSES",
+      "router": {},
+      "eas": {
+        "projectId": "93bee635-015d-4e24-93d3-24106a4888f8"
+      }
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.anonymous.PassFit",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "config": {
+        "googleSignIn": {
+          "reservedClientId": "583767453466-76jgmbgv7fpsa0072c5lhv5m7avsjrtd.apps.googleusercontent.com"
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,6 +46,8 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
@@ -48,7 +71,10 @@
       [
         "@react-native-google-signin/google-signin",
         {
-          "iosUrlScheme": "com.googleusercontent.apps.REVERSED_IOS_CLIENT_ID"
+          "iosClientId": "583767453466-76jgmbgv7fpsa0072c5lhv5m7avsjrtd.apps.googleusercontent.com",
+          "androidClientId": "583767453466-nb7fe2fqlvql54m24potsmoa8iie5s23.apps.googleusercontent.com",
+          "webClientId": "583767453466-hhre84pr2c3p21d228c3tge4ngor8k7r.apps.googleusercontent.com",
+          "iosUrlScheme": "com.googleusercontent.apps.583767453466-76jgmbgv7fpsa0072c5lhv5m7avsjrtd"
         }
       ],
       [
@@ -60,9 +86,16 @@
         {
           "ios": {
             "useFrameworks": "static"
+          },
+          "android": {
+            "googleServicesFile": "google-services.json"
           }
         }
       ]
-    ]
+    ],
+    "runtimeVersion": "1.0.0",
+    "updates": {
+      "url": "https://u.expo.dev/93bee635-015d-4e24-93d3-24106a4888f8"
+    }
   }
 }

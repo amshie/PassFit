@@ -63,11 +63,15 @@ export default function RootLayout() {
     // Initialize Google Sign-In when app starts
     const initializeGoogleSignIn = async () => {
       try {
-        await AuthService.initializeGoogleSignIn();
-        console.log('Google Sign-In initialized successfully');
+        if (AuthService.isGoogleSignInAvailable()) {
+          AuthService.initializeGoogleSignIn();
+          console.log('Google Sign-In initialized successfully');
+        } else {
+          console.log('Google Sign-In not available - running in Expo Go. Use email/password authentication or create a development build for Google Sign-In.');
+        }
       } catch (error) {
-        console.log('Google Sign-In initialization failed:', error);
-        // This is expected if Google credentials are not configured yet
+        console.warn('Google Sign-In initialization failed:', error);
+        // This is expected if running in Expo Go or if Google credentials are not configured
       }
     };
 

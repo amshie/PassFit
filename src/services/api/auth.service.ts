@@ -1,3 +1,14 @@
+import { Platform } from 'react-native';
+import Constants from 'expo-constants';
+import { auth, db } from '../firebase/config';
+import {
+  User,
+  LoginCredentials,
+  RegisterCredentials,
+  AuthError,
+} from '@/types';
+
+// Import Firebase functions - use standard Firebase SDK for both web and native
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
@@ -11,15 +22,21 @@ import {
   UserCredential,
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '../firebase/config';
-import {
-  User,
-  LoginCredentials,
-  RegisterCredentials,
-  AuthError,
-} from '@/types';
-// import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { Platform } from 'react-native';
+
+// Conditionally import GoogleSignin only when needed
+let GoogleSignin: any = null;
+let isGoogleSignInModuleAvailable = false;
+
+try {
+  if (Platform.OS !== 'web') {
+    GoogleSignin = require('@react-native-google-signin/google-signin').GoogleSignin;
+    isGoogleSignInModuleAvailable = true;
+  }
+} catch (error) {
+  console.warn('Google Sign-in module not available - likely running in Expo Go:', error);
+  GoogleSignin = null;
+  isGoogleSignInModuleAvailable = false;
+}
 
 export class AuthService {
   /**
@@ -27,10 +44,7 @@ export class AuthService {
    */
   static async signIn(credentials: LoginCredentials): Promise<User> {
     try {
-      // For now, we'll use email authentication
-      // Phone authentication would require additional setup with Firebase
       const email = credentials.email || credentials.phone;
-      
       if (!email) {
         throw new Error('E-Mail oder Telefonnummer ist erforderlich');
       }
@@ -40,9 +54,7 @@ export class AuthService {
         email,
         credentials.password
       );
-
-      const user = await this.getUserProfile(userCredential.user);
-      return user;
+      return this.getUserProfile(userCredential.user);
     } catch (error: any) {
       throw this.handleAuthError(error);
     }
@@ -58,19 +70,11 @@ export class AuthService {
         credentials.email,
         credentials.password
       );
-
-      // Update display name
       await updateProfile(userCredential.user, {
         displayName: credentials.displayName,
       });
-
-      // Send email verification
       await sendEmailVerification(userCredential.user);
-
-      // Create user profile in Firestore
-      const user = await this.createUserProfile(userCredential.user);
-      
-      return user;
+      return this.createUserProfile(userCredential.user);
     } catch (error: any) {
       throw this.handleAuthError(error);
     }
@@ -114,29 +118,42 @@ export class AuthService {
   }
 
   /**
+   * Check if Google Sign-in is available
+   */
+  static isGoogleSignInAvailable(): boolean {
+    if (Platform.OS === 'web') {
+      return true; // Web Google Sign-in is always available
+    }
+    return isGoogleSignInModuleAvailable && GoogleSignin !== null;
+  }
+
+  /**
    * Initialize Google Sign-In
    */
-  static async initializeGoogleSignIn(): Promise<void> {
-    try {
-      // For now, Google Sign-In is disabled until OAuth client IDs are configured
-      // Uncomment and configure when you have Google OAuth client IDs
-      console.log('Google Sign-In initialization skipped - OAuth client IDs not configured');
+  static initializeGoogleSignIn(): void {
+    // For Expo managed workflow, Google Sign-in is handled differently
+    if (Platform.OS === 'web') {
+      // Web initialization is handled in signInWithGoogle method
+      return;
+    } else {
+      // Check if GoogleSignin module is available
+      if (!isGoogleSignInModuleAvailable || !GoogleSignin) {
+        console.warn('Google Sign-in module not available - likely running in Expo Go. Use a development build for Google Sign-in functionality.');
+        return; // Don't throw error, just return silently
+      }
       
-      // const webClientId = process.env['EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID'];
-      
-      // if (!webClientId) {
-      //   throw new Error('Google Web Client ID not configured');
-      // }
-
-      // await GoogleSignin.configure({
-      //   webClientId: webClientId,
-      //   offlineAccess: true,
-      //   hostedDomain: '',
-      //   forceCodeForRefreshToken: true,
-      // });
-    } catch (error: any) {
-      console.error('Google Sign-In initialization failed:', error);
-      throw this.handleAuthError(error);
+      try {
+        GoogleSignin.configure({
+          webClientId: '583767453466-hhre84pr2c3p21d228c3tge4ngor8k7r.apps.googleusercontent.com',
+          iosClientId: '583767453466-76jgmbgv7fpsa0072c5lhv5m7avsjrtd.apps.googleusercontent.com',
+          offlineAccess: false,
+        });
+        console.log('Google Sign-in configured successfully');
+      } catch (error) {
+        console.warn('Google Sign-in configuration failed:', error);
+        // Mark module as unavailable if configuration fails
+        isGoogleSignInModuleAvailable = false;
+      }
     }
   }
 
@@ -145,43 +162,75 @@ export class AuthService {
    */
   static async signInWithGoogle(): Promise<User> {
     try {
-      // Google Sign-In is disabled until OAuth client IDs are configured
-      throw new Error('Google Sign-In is not configured. Please use email authentication or configure Google OAuth client IDs.');
-      
-      // // Initialize Google Sign-In if not already done
-      // await this.initializeGoogleSignIn();
+      if (Platform.OS === 'web') {
+        // Web Google Sign-In using Firebase Auth
+        const { signInWithPopup } = require('firebase/auth');
+        
+        // Get web client ID from Constants
+        const webClientId = Constants.expoConfig?.extra?.GOOGLE_WEB_CLIENT_ID || 
+                           '583767453466-hhre84pr2c3p21d228c3tge4ngor8k7r.apps.googleusercontent.com';
+        
+        const provider = new GoogleAuthProvider();
+        provider.setCustomParameters({
+          client_id: webClientId
+        });
+        
+        const userCredential: UserCredential = await signInWithPopup(auth, provider);
+        return this.getUserProfile(userCredential.user);
+      } else {
+        // For Expo managed workflow, check if native module is available
+        if (!isGoogleSignInModuleAvailable || !GoogleSignin) {
+          throw new Error('Google Sign-in is not available in Expo Go. Please use email/password authentication or create a development build.');
+        }
+        
+        try {
+          // Ensure Google Sign-in is initialized
+          this.initializeGoogleSignIn();
+          
+          // Double-check availability after initialization
+          if (!isGoogleSignInModuleAvailable) {
+            throw new Error('Google Sign-in module failed to initialize. Please use email/password authentication or create a development build.');
+          }
 
-      // // Check if device supports Google Play Services (Android)
-      // await GoogleSignin.hasPlayServices();
+          if (Platform.OS === 'android') {
+            await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+          }
 
-      // // Get user info from Google
-      // const userInfo = await GoogleSignin.signIn();
-      
-      // if (!userInfo.data?.idToken) {
-      //   throw new Error('Google sign-in failed: No ID token received');
-      // }
+          const userInfo = await GoogleSignin.signIn();
+          
+          // Get tokens separately for React Native Google Sign-in
+          const tokens = await GoogleSignin.getTokens();
+          const idToken = tokens.idToken;
+          
+          if (!idToken) {
+            throw new Error('Google sign-in failed: No ID token received');
+          }
 
-      // // Create Firebase credential
-      // const googleCredential = GoogleAuthProvider.credential(userInfo.data.idToken);
-
-      // // Sign in to Firebase with Google credential
-      // const userCredential = await signInWithCredential(auth, googleCredential);
-
-      // // Get or create user profile
-      // const user = await this.getUserProfile(userCredential.user);
-      
-      // return user;
+          // Create Google credential
+          const googleCredential = GoogleAuthProvider.credential(idToken);
+          const userCredential: UserCredential = await signInWithCredential(auth, googleCredential);
+          return this.getUserProfile(userCredential.user);
+        } catch (error: any) {
+          // Handle specific Google Sign-in errors
+          if (error.message.includes('development build') || 
+              error.message.includes('RNGoogleSignin') ||
+              error.message.includes('TurboModuleRegistry') ||
+              error.message.includes('module failed to initialize')) {
+            throw new Error('Google Sign-in is not available in Expo Go. Please use email/password authentication or create a development build.');
+          }
+          throw error;
+        }
+      }
     } catch (error: any) {
-      console.error('Google sign-in error:', error);
+      console.error('Google Sign-in Error:', error);
       throw this.handleAuthError(error);
     }
   }
 
   /**
-   * Register with Google
+   * Register with Google (same as sign-in)
    */
   static async registerWithGoogle(): Promise<User> {
-    // Google registration is the same as sign-in for new users
     return this.signInWithGoogle();
   }
 
@@ -204,16 +253,17 @@ export class AuthService {
    */
   private static async createUserProfile(firebaseUser: FirebaseUser): Promise<User> {
     const user: User = {
-      uid: firebaseUser.uid,
-      email: firebaseUser.email!,
+      uid:         firebaseUser.uid,
+      email:       firebaseUser.email!,
       displayName: firebaseUser.displayName || '',
-      photoURL: firebaseUser.photoURL ?? undefined,
+      photoURL:    firebaseUser.photoURL ?? undefined,
       emailVerified: firebaseUser.emailVerified,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt:     new Date(),
+      updatedAt:     new Date(),
     };
-
-    await setDoc(doc(db, 'users', user.uid), user);
+    
+    const userDocRef = doc(db, 'users', user.uid);
+    await setDoc(userDocRef, user);
     return user;
   }
 
@@ -221,52 +271,47 @@ export class AuthService {
    * Get user profile from Firestore
    */
   private static async getUserProfile(firebaseUser: FirebaseUser): Promise<User> {
-    const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+    const userDocRef = doc(db, 'users', firebaseUser.uid);
+    const userDoc = await getDoc(userDocRef);
     
     if (userDoc.exists()) {
-      const userData = userDoc.data();
+      const data = userDoc.data();
       return {
-        uid: firebaseUser.uid,
-        email: firebaseUser.email!,
-        displayName: firebaseUser.displayName || userData['displayName'] || '',
-        photoURL: firebaseUser.photoURL ?? userData['photoURL'] ?? undefined,
+        uid:           firebaseUser.uid,
+        email:         firebaseUser.email!,
+        displayName:   firebaseUser.displayName || data?.displayName || '',
+        photoURL:      firebaseUser.photoURL ?? data?.photoURL ?? undefined,
         emailVerified: firebaseUser.emailVerified,
-        createdAt: userData['createdAt']?.toDate() || new Date(),
-        updatedAt: new Date(),
+        createdAt:     data?.createdAt?.toDate ? data.createdAt.toDate() : (data?.createdAt || new Date()),
+        updatedAt:     new Date(),
       };
-    } else {
-      // Create profile if it doesn't exist
-      return await this.createUserProfile(firebaseUser);
     }
+    return this.createUserProfile(firebaseUser);
   }
 
   /**
    * Handle authentication errors
    */
   private static handleAuthError(error: any): AuthError {
-    const authError: AuthError = {
-      code: error.code || 'unknown',
-      message: this.getErrorMessage(error.code) || error.message || 'An unknown error occurred',
-    };
-
-    return authError;
+    const code    = error.code || 'unknown';
+    const message = this.getErrorMessage(code) || error.message || 'Ein unbekannter Fehler ist aufgetreten';
+    return { code, message };
   }
 
   /**
-   * Get user-friendly error messages
+   * Map Firebase error codes to user-friendly messages
    */
   private static getErrorMessage(errorCode: string): string {
-    const errorMessages: Record<string, string> = {
-      'auth/user-not-found': 'No user found with this email address.',
-      'auth/wrong-password': 'Incorrect password.',
-      'auth/email-already-in-use': 'An account with this email already exists.',
-      'auth/weak-password': 'Password should be at least 6 characters.',
-      'auth/invalid-email': 'Invalid email address.',
-      'auth/user-disabled': 'This account has been disabled.',
-      'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
-      'auth/network-request-failed': 'Network error. Please check your connection.',
+    const messages: Record<string, string> = {
+      'auth/user-not-found':            'Kein Benutzer mit dieser E-Mail gefunden.',
+      'auth/wrong-password':            'Falsches Passwort.',
+      'auth/email-already-in-use':      'Diese E-Mail wird bereits verwendet.',
+      'auth/weak-password':             'Das Passwort muss mindestens 6 Zeichen lang sein.',
+      'auth/invalid-email':             'Ungültige E-Mail-Adresse.',
+      'auth/user-disabled':             'Dieses Konto wurde gesperrt.',
+      'auth/too-many-requests':         'Zu viele Versuche. Bitte später erneut versuchen.',
+      'auth/network-request-failed':    'Netzwerkfehler. Überprüfe deine Verbindung.',
     };
-
-    return errorMessages[errorCode] || 'An unexpected error occurred.';
+    return messages[errorCode] || 'Ein unerwarteter Fehler ist aufgetreten.';
   }
 }

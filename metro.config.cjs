@@ -20,6 +20,17 @@ config.transformer = {
   }),
 };
 
+// Web-specific transformer to handle import.meta
+if (process.env.EXPO_PLATFORM === 'web') {
+  config.transformer.babelTransformerPath = require.resolve('metro-react-native-babel-transformer');
+  config.transformer.minifierConfig = {
+    keep_fnames: true,
+    mangle: {
+      keep_fnames: true,
+    },
+  };
+}
+
 // Web-specific configuration
 config.resolver.alias = {
   ...config.resolver.alias,
