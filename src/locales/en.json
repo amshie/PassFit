@@ -114,7 +114,9 @@
     "vip": "VIP Plan",
     "gold": "Gold Plan",
     "vipPrice": "€ 99 / Month",
-    "goldPrice": "€ 49 / Month"
+    "goldPrice": "€ 49 / Month",
+    "purchaseSuccess": "Subscription activated successfully.",
+    "purchaseError": "Could not start checkout. Please try again."
   },
   "accessibility": {
     "searchStudios": "Search studios",

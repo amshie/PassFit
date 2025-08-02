@@ -2,16 +2,23 @@ import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
+  deleteDoc,
   collection,
   query,
   where,
   getDocs,
   Timestamp,
+  writeBatch,
 } from 'firebase/firestore';
 import { updateProfile, updateEmail, updatePassword } from 'firebase/auth';
 import { auth, db } from '../firebase/config';
 import { UserProfile, UserStats } from '@/types';
+
+export interface CookiePreferences {
+  essential: boolean;
+  analytics: boolean;
+  marketing: boolean;
+}
 
 export class UserService {
   /**
@@ -216,17 +223,68 @@ export class UserService {
   }
 
   /**
+   * Export all user-related data for GDPR compliance
+   */
+  static async exportUserData(uid: string): Promise<any> {
+    try {
+      const profile = await this.getUserProfile(uid);
+
+      const workoutsSnapshot = await getDocs(
+        query(collection(db, 'workoutSessions'), where('userId', '==', uid))
+      );
+      const workouts = workoutsSnapshot.docs.map(docSnap => ({
+        id: docSnap.id,
+        ...docSnap.data(),
+      }));
+
+      return { profile, workouts };
+    } catch (error) {
+      console.error('Error exporting user data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Save cookie preferences for a user
+   */
+  static async updateCookiePreferences(
+    uid: string,
+    preferences: CookiePreferences
+  ): Promise<void> {
+    try {
+      await setDoc(
+        doc(db, 'cookiePreferences', uid),
+        { ...preferences, updatedAt: Timestamp.now() },
+        { merge: true }
+      );
+    } catch (error) {
+      console.error('Error updating cookie preferences:', error);
+      throw error;
+    }
+  }
+
+  /**
    * Delete user account and all associated data
    */
   static async deleteUserAccount(uid: string): Promise<void> {
     try {
-      // Delete user profile
-      await setDoc(doc(db, 'userProfiles', uid), { deleted: true }, { merge: true });
-      
-      // Note: In a production app, you'd want to delete all user data
-      // This is a simplified version
-      
-      console.log('User account marked for deletion:', uid);
+      // Delete workout sessions
+      const sessionsSnapshot = await getDocs(
+        query(collection(db, 'workoutSessions'), where('userId', '==', uid))
+      );
+      const batch = writeBatch(db);
+      sessionsSnapshot.forEach(docSnap => batch.delete(docSnap.ref));
+      await batch.commit();
+
+      // Delete cookie preferences and profile
+      await deleteDoc(doc(db, 'cookiePreferences', uid));
+      await deleteDoc(doc(db, 'userProfiles', uid));
+
+      // Delete user from auth
+      const currentUser = auth.currentUser;
+      if (currentUser && currentUser.uid === uid) {
+        await currentUser.delete();
+      }
     } catch (error) {
       console.error('Error deleting user account:', error);
       throw error;

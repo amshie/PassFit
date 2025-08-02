@@ -264,7 +264,9 @@
     "vip": "VIP Tarif",
     "gold": "Gold Tarif",
     "vipPrice": "€ 99 / Monat",
-    "goldPrice": "€ 49 / Monat"
+    "goldPrice": "€ 49 / Monat",
+    "purchaseSuccess": "Abonnement erfolgreich aktiviert.",
+    "purchaseError": "Checkout konnte nicht gestartet werden. Bitte versuche es erneut."
   },
   "accessibility": {
     "searchStudios": "Studios suchen",

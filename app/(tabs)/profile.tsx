@@ -8,9 +8,11 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
 
 // ✅ Hook-Layer für deklaratives User-Management
 import { useUserRealtime, useUserSubscriptionStatus } from '../../src/hooks/useUser';
@@ -19,6 +21,8 @@ import { useActiveUserSubscription } from '../../src/hooks/useSubscription';
 import { useAppStore } from '../../src/store';
 // ✅ Theme Context
 import { useTheme } from '../../src/providers/ThemeProvider';
+// ✅ Services
+import { UserService } from '../../src/services/api/user.service';
 
 export default function ProfileTabScreen() {
   const router = useRouter();
@@ -36,18 +40,29 @@ export default function ProfileTabScreen() {
   const { data: subscriptionStatus, isLoading: subscriptionLoading } = useUserSubscriptionStatus(currentUser?.uid || '');
   const { data: activeSubscription } = useActiveUserSubscription(currentUser?.uid || '');
 
-  const handleAvatarPress = () => {
-    Alert.alert(
-      'Profilbild',
-      'Möchten Sie Ihr Profilbild ändern?',
-      [
-        { text: 'Abbrechen', style: 'cancel' },
-        { text: 'Foto auswählen', onPress: () => {
-          // TODO: Implement photo picker
-          console.log('Photo picker not implemented yet');
-        }},
-      ]
-    );
+  const handleAvatarPress = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Berechtigung erforderlich', 'Zugriff auf die Fotobibliothek wird benötigt.');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0 && currentUser?.uid) {
+        const uri = result.assets[0].uri;
+        await UserService.updateUserProfile(currentUser.uid, { photoURL: uri });
+      }
+    } catch (err) {
+      console.error('Avatar update error:', err);
+      Alert.alert('Fehler', 'Profilbild konnte nicht aktualisiert werden.');
+    }
   };
 
   const handleMenuPress = (menuItem: string) => {
@@ -56,12 +71,10 @@ export default function ProfileTabScreen() {
         router.push('/account');
         break;
       case 'favorites':
-        // TODO: Navigate to favorites screen
-        Alert.alert('Favoriten', 'Favoriten-Funktion wird bald verfügbar sein.');
+        router.push('/profile/favorites');
         break;
       case 'referral':
-        // TODO: Navigate to referral screen
-        Alert.alert('Weitersagen', 'Empfehlungsprogramm wird bald verfügbar sein.');
+        router.push('/profile/referral');
         break;
       case 'settings':
         router.push('/profile/settings');
@@ -135,9 +148,24 @@ export default function ProfileTabScreen() {
       <View style={[styles.headerSection, { backgroundColor: getSurfaceColor(), borderBottomColor: getBorderColor() }]}>
         {/* Avatar Placeholder */}
         <TouchableOpacity style={styles.avatarContainer} onPress={handleAvatarPress}>
-          <View style={[styles.avatarPlaceholder, { backgroundColor: isDark ? '#374151' : '#F3F4F6', borderColor: getBorderColor() }]}>
-            <Ionicons name="camera" size={32} color={getTextColor('secondary')} />
-          </View>
+          {userProfile?.photoURL ? (
+            <Image
+              source={{ uri: userProfile.photoURL }}
+              style={[styles.avatarImage, { borderColor: getBorderColor() }]}
+            />
+          ) : (
+            <View
+              style={[
+                styles.avatarPlaceholder,
+                {
+                  backgroundColor: isDark ? '#374151' : '#F3F4F6',
+                  borderColor: getBorderColor(),
+                },
+              ]}
+            >
+              <Ionicons name="camera" size={32} color={getTextColor('secondary')} />
+            </View>
+          )}
         </TouchableOpacity>
 
         {/* Username */}
@@ -281,6 +309,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderStyle: 'dashed',
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    borderWidth: 2,
   },
   username: {
     fontSize: 28,

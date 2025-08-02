@@ -4,14 +4,19 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  TouchableOpacity,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { Timestamp } from 'firebase/firestore';
 
 // UI Components
 import { Card } from '../../src/components/ui';
+
+// Services and Store
+import { SubscriptionService } from '@/services/api';
+import { syncUserSubscriptionStatus } from '@/services/firebase/userService';
+import { useAppStore } from '@/store';
 
 // Theme Context
 import { useTheme } from '../../src/providers/ThemeProvider';
@@ -19,23 +24,35 @@ import { useTheme } from '../../src/providers/ThemeProvider';
 export default function UpgradeTabScreen() {
   const { t } = useTranslation();
   const { getBackgroundColor, getTextColor, getSurfaceColor, getBorderColor, isDark } = useTheme();
+  const currentUser = useAppStore(state => state.user);
 
-  const handlePlanPress = (planType: 'vip' | 'gold') => {
-    // Placeholder handler for future checkout flow
-    Alert.alert(
-      t('upgrade.choosePlan'),
-      `${t(`upgrade.${planType}`)} - ${t(`upgrade.${planType}Price`)}`,
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        { 
-          text: t('common.ok'), 
-          onPress: () => {
-            console.log(`Selected ${planType} plan`);
-            // TODO: Implement checkout flow
-          }
-        },
-      ]
-    );
+  const handlePlanPress = async (planType: 'vip' | 'gold') => {
+    if (!currentUser) {
+      Alert.alert(t('common.error'), 'Bitte melde dich an.');
+      return;
+    }
+
+    try {
+      const startedAt = Timestamp.now();
+      const expiresAt = Timestamp.fromDate(
+        new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+      );
+
+      await SubscriptionService.createSubscription({
+        userId: currentUser.uid,
+        planId: planType,
+        startedAt,
+        expiresAt,
+        status: 'active',
+      });
+
+      await syncUserSubscriptionStatus(currentUser.uid, 'active');
+
+      Alert.alert(t('common.ok'), t('upgrade.purchaseSuccess'));
+    } catch (error) {
+      console.error('Checkout error:', error);
+      Alert.alert(t('common.error'), t('upgrade.purchaseError'));
+    }
   };
 
   const getPlanIcon = (planType: 'vip' | 'gold') => {
