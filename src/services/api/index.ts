@@ -1,5 +1,6 @@
 export { AuthService } from './auth.service';
 export { UserService } from './user.service';
+export type { CookiePreferences } from './user.service';
 export { WorkoutService } from './workout.service';
 export { StudioService } from './studio.service';
 export { SubscriptionService } from './subscription.service';

@@ -11,9 +11,14 @@ import {
   ActivityIndicator,
   Switch,
   ScrollView,
+  Share,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
+
+// Services
+import { UserService, CookiePreferences } from '@/services/api';
 
 // Types
 import { User } from '../../../models/users';
@@ -22,14 +27,9 @@ interface PrivacySectionProps {
   userProfile: User | null;
 }
 
-interface CookiePreferences {
-  essential: boolean;
-  analytics: boolean;
-  marketing: boolean;
-}
-
 export function PrivacySection({ userProfile: _userProfile }: PrivacySectionProps) {
   const { t } = useTranslation();
+  const router = useRouter();
   const [showCookieModal, setShowCookieModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -45,14 +45,15 @@ export function PrivacySection({ userProfile: _userProfile }: PrivacySectionProp
   const handleDataDownload = async () => {
     setIsLoading(true);
     try {
-      // TODO: Implement GDPR data export
-      // const exportData = await UserService.exportUserData(userProfile?.uid);
-      // const downloadUrl = await generateDataExportPDF(exportData);
-      // await Linking.openURL(downloadUrl);
-      
-      // Mock data export
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
+      if (!_userProfile) {
+        throw new Error('No user profile available');
+      }
+      const exportData = await UserService.exportUserData(_userProfile.uid);
+      await Share.share({
+        message: JSON.stringify(exportData, null, 2),
+        title: t('account.privacy.dataDownload.title'),
+      });
+
       Alert.alert(
         t('common.ok'),
         t('account.privacy.dataDownload.downloadSuccess')
@@ -71,17 +72,16 @@ export function PrivacySection({ userProfile: _userProfile }: PrivacySectionProp
   const handleSaveCookiePreferences = async () => {
     setIsLoading(true);
     try {
-      // TODO: Save cookie preferences to backend
-      // await UserService.updateCookiePreferences(userProfile?.uid, cookiePreferences);
-      
-      // Mock save
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setShowCookieModal(false);
-      Alert.alert(
-        t('common.ok'),
-        'Cookie-Einstellungen wurden gespeichert.'
+      if (!_userProfile) {
+        throw new Error('No user profile available');
+      }
+      await UserService.updateCookiePreferences(
+        _userProfile.uid,
+        cookiePreferences
       );
+
+      setShowCookieModal(false);
+      Alert.alert(t('common.ok'), 'Cookie-Einstellungen wurden gespeichert.');
     } catch (error) {
       console.error('Cookie preferences save error:', error);
       Alert.alert(
@@ -104,13 +104,10 @@ export function PrivacySection({ userProfile: _userProfile }: PrivacySectionProp
 
     setIsLoading(true);
     try {
-      // TODO: Implement account deletion
-      // await UserService.deleteUserAccount(userProfile?.uid);
-      // await auth.currentUser?.delete();
-      
-      // Mock deletion
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
+      if (!_userProfile) {
+        throw new Error('No user profile available');
+      }
+      await UserService.deleteUserAccount(_userProfile.uid);
       Alert.alert(
         t('common.ok'),
         t('account.privacy.deleteAccount.deleteSuccess'),
@@ -118,8 +115,7 @@ export function PrivacySection({ userProfile: _userProfile }: PrivacySectionProp
           {
             text: 'OK',
             onPress: () => {
-              // Navigate to login screen
-              // router.replace('/');
+              router.replace('/');
             },
           },
         ]
