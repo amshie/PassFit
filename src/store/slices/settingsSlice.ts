@@ -1,6 +1,8 @@
 import { StateCreator } from 'zustand';
 import i18n from '../../locales/i18n';
-import { Appearance } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+import { registerForPushNotifications } from '../../utils/notifications';
 
 // Settings state interface
 export interface SettingsState {
@@ -12,6 +14,7 @@ export interface SettingsState {
   
   // Notification settings
   notifications: boolean;
+  expoPushToken: string | null;
   
   // Loading states
   isChangingLanguage: boolean;
@@ -53,6 +56,7 @@ const defaultSettingsState: SettingsState = {
   language: 'de',
   themeMode: 'system',
   notifications: true,
+  expoPushToken: null,
   isChangingLanguage: false,
   isChangingTheme: false,
   isChangingNotifications: false,
@@ -118,24 +122,25 @@ export const createSettingsSlice: StateCreator<
   // Notification actions
   toggleNotifications: async (enabled: boolean) => {
     set({ isChangingNotifications: true, notificationsError: null });
-    
+
     try {
       if (enabled) {
         // Request permissions when enabling notifications
         const hasPermission = await get().requestNotificationPermissions();
         if (!hasPermission) {
-          set({ 
+          set({
             notificationsError: 'Notification permissions denied',
-            isChangingNotifications: false 
+            isChangingNotifications: false
           });
           return;
         }
       }
-      
+
       // Update state
-      set({ 
+      set({
         notifications: enabled,
-        isChangingNotifications: false 
+        expoPushToken: enabled ? get().expoPushToken : null,
+        isChangingNotifications: false
       });
       
       console.log(`Notifications ${enabled ? 'enabled' : 'disabled'}`);
@@ -150,10 +155,11 @@ export const createSettingsSlice: StateCreator<
 
   requestNotificationPermissions: async (): Promise<boolean> => {
     try {
-      // For now, we'll implement a basic permission check
-      // In a real app, you would use expo-notifications or react-native-permissions
-      console.log('Notification permissions requested');
-      return true; // Assume granted for now
+      const { token, granted } = await registerForPushNotifications();
+      if (granted && token) {
+        set({ expoPushToken: token });
+      }
+      return granted;
     } catch (error) {
       console.error('Failed to request notification permissions:', error);
       return false;
@@ -168,19 +174,23 @@ export const createSettingsSlice: StateCreator<
   // Initialize settings
   initializeSettings: async () => {
     try {
-      // Get system theme preference
-      const systemColorScheme = Appearance.getColorScheme();
-      
       // Get current i18n language
       const currentLanguage = i18n.language as 'de' | 'en';
       
-      // For now, assume notifications are available
-      const hasNotificationPermissions = true;
-      
+      // Check current notification permissions
+      const { status } = await Notifications.getPermissionsAsync();
+      const hasNotificationPermissions = status === 'granted';
+      let token: string | null = null;
+      if (hasNotificationPermissions) {
+        const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
+        token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+      }
+
       // Update state with current values (this will be overridden by persisted state if available)
       set({
         language: currentLanguage,
         notifications: hasNotificationPermissions,
+        expoPushToken: token,
       });
       
       console.log('Settings initialized');
