@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   StyleSheet,
@@ -6,6 +6,7 @@ import {
   Text,
   TouchableOpacity,
   SafeAreaView,
+  Alert,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,10 +14,33 @@ import { StatusBar } from 'expo-status-bar';
 
 import { useStudio } from '@/hooks/useStudio';
 import { StudioDetails } from '@/components/ui';
+import { useAppStore } from '@/store';
+import { useUserRealtime, useUserSubscriptionStatus } from '@/hooks/useUser';
+import { useHasCheckedInToday, useCreateCheckIn } from '@/hooks/useCheckIn';
+import { UserService } from '@/services/api/user.service';
+import { Studio } from '@/models/studio';
 
 export default function StudioDetailPage() {
   const { studioId } = useLocalSearchParams<{ studioId: string }>();
   const router = useRouter();
+
+  const currentUser = useAppStore((state) => state.user);
+  const { data: userProfile } = useUserRealtime(currentUser?.uid || '');
+  const { data: subscriptionStatus } = useUserSubscriptionStatus(currentUser?.uid || '');
+  const { data: hasCheckedInToday } = useHasCheckedInToday(
+    currentUser?.uid || '',
+    studioId
+  );
+  const checkInMutation = useCreateCheckIn();
+
+  const [isFavorite, setIsFavorite] = useState(false);
+
+  useEffect(() => {
+    if (userProfile && studioId) {
+      const favorites = ((userProfile as any)?.favoriteStudios || []) as string[];
+      setIsFavorite(favorites.includes(studioId));
+    }
+  }, [userProfile, studioId]);
   
   // Fetch studio data using the existing hook
   const { 
@@ -108,16 +132,39 @@ export default function StudioDetailPage() {
       {/* Studio Details Component */}
       <StudioDetails
         studio={studio}
-        onCheckIn={(studio) => {
-          // TODO: Implement check-in functionality
-          console.log('Check-in requested for:', studio.name);
+        onCheckIn={async (studio: Studio) => {
+          if (!currentUser?.uid) return;
+          try {
+            await checkInMutation.mutateAsync({
+              userId: currentUser.uid,
+              studioId: studio.studioId,
+            });
+            Alert.alert('Erfolg', 'Check-in erfolgreich.');
+          } catch (err) {
+            const message = err instanceof Error ? err.message : 'Check-in fehlgeschlagen';
+            Alert.alert('Fehler', message);
+          }
         }}
-        onFavoriteToggle={(studio) => {
-          // TODO: Implement favorite toggle functionality
-          console.log('Favorite toggle for:', studio.name);
+        onFavoriteToggle={async (studio: Studio) => {
+          if (!currentUser?.uid) return;
+          try {
+            const favorites = ((userProfile as any)?.favoriteStudios || []) as string[];
+            let updated: string[];
+            if (favorites.includes(studio.studioId)) {
+              updated = favorites.filter((id) => id !== studio.studioId);
+            } else {
+              updated = [...favorites, studio.studioId];
+            }
+            setIsFavorite(updated.includes(studio.studioId));
+            await UserService.updateUserProfile(currentUser.uid, {
+              favoriteStudios: updated,
+            } as any);
+          } catch (error) {
+            console.error('Favorite toggle error:', error);
+          }
         }}
-        isFavorite={false} // TODO: Get from user preferences
-        canCheckIn={true}  // TODO: Check user subscription and today's check-ins
+        isFavorite={isFavorite}
+        canCheckIn={subscriptionStatus === 'active' && !hasCheckedInToday}
       />
     </SafeAreaView>
   );
