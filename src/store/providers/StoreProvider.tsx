@@ -10,19 +10,21 @@ interface StoreProviderProps {
  */
 export const StoreProvider: React.FC<StoreProviderProps> = ({ children }) => {
   useEffect(() => {
-    // Initialize authentication state when the app starts
+    // Initialize authentication and settings state when the app starts
     const store = useAppStore.getState();
-    
+    let unsubscribe: (() => void) | undefined;
+
     if (!store.isInitialized) {
-      const unsubscribe = store.initializeAuth();
-      
-      // Cleanup function
-      return () => {
-        if (typeof unsubscribe === 'function') {
-          unsubscribe();
-        }
-      };
+      unsubscribe = store.initializeAuth();
     }
+
+    store.initializeSettings();
+
+    return () => {
+      if (typeof unsubscribe === 'function') {
+        unsubscribe();
+      }
+    };
   }, []);
 
   return <>{children}</>;

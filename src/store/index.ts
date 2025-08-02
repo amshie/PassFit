@@ -35,6 +35,7 @@ export const useAppStore = create<AppStore>()(
           language: state.language,
           themeMode: state.themeMode,
           notifications: state.notifications,
+          expoPushToken: state.expoPushToken,
           
           // Don't persist sensitive or temporary data
           // isLoading states, errors, current sessions, etc. will not be persisted
@@ -134,6 +135,7 @@ export const useWorkouts = () => useAppStore((state) => ({
 export const useThemeMode = () => useAppStore((state) => state.themeMode);
 export const useLanguage = () => useAppStore((state) => state.language);
 export const useNotifications = () => useAppStore((state) => state.notifications);
+export const useExpoPushToken = () => useAppStore((state) => state.expoPushToken);
 
 // Individual loading state selectors
 export const useIsChangingLanguage = () => useAppStore((state) => state.isChangingLanguage);
@@ -185,6 +187,7 @@ export const useSettings = () => useAppStore((state) => ({
   language: state.language,
   themeMode: state.themeMode,
   notifications: state.notifications,
+  expoPushToken: state.expoPushToken,
   
   // Loading states
   isChangingLanguage: state.isChangingLanguage,

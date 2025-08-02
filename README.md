@@ -46,11 +46,11 @@ Eine moderne React Native/Expo-App für die Suche und Verwaltung von Fitness-Stu
 - **Progress Tracking** - Vollständige Check-In Historie mit Kalender
 - **Theme Provider** - Dynamisches Theme-System mit System-Integration
 - **Cloud Function Sync** - Automatische Daten-Synchronisation
+- **Push Notifications** - Vollständige Expo Push-Integration
 
 ### 🚧 Teilweise Implementiert
 - **Payment Integration** - Datenmodelle vorhanden, Stripe/PayPal Integration ausstehend
 - **Workout Sharing** - Backend-Modelle implementiert, UI-Komponenten fehlen
-- **Push Notifications** - Grundstruktur vorhanden, vollständige Integration ausstehend
 
 ### ❌ Noch Fehlend
 - **Vollständige Payment-Integration** (Stripe/PayPal)
@@ -574,7 +574,7 @@ npm run build:dev-client:ios     # iOS Development Client Build
 - [ ] Community-Events & Meetups
 
 ### Phase 5: Advanced Features (📋 Geplant)
-- [ ] Push-Benachrichtigungen (Grundstruktur vorhanden)
+- [x] Push-Benachrichtigungen (Expo Push vollständig integriert)
 - [ ] Offline-Unterstützung mit Sync
 - [ ] Advanced Analytics & Insights
 - [ ] Wearable Integration (Apple Watch, Fitbit)

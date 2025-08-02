@@ -8,6 +8,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 import '@/locales/i18n'; // Initialize i18n
 
 // ✅ QueryClient für React Query mit Offline-Persistierung erstellen
@@ -56,6 +57,15 @@ persistQueryClient({
   queryClient,
   persister: asyncStoragePersister,
   maxAge: 24 * 60 * 60 * 1000, // 24 Stunden
+});
+
+// Configure foreground notification behavior
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
 });
 
 export default function RootLayout() {
